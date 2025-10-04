@@ -54,14 +54,14 @@ jobs:
           port: 22
           script: |
             # Stop existing server (if using serve or pm2)
-            pm2 stop react-app || true
+            pm2 stop playmate || true
             
             # Remove old build
-            rm -rf /var/www/react-app/*
+            rm -rf /var/www/playmate/*
 
             # Copy new build
-            mkdir -p /var/www/react-app
-            cp -r ./build/* /var/www/react-app/
+            mkdir -p /var/www/playmate
+            cp -r ./build/* /var/www/playmate/
 
             # Restart server
-            pm2 start serve --name react-app -- -s /var/www/react-app -l 80
+            pm2 start --name playmate -- -s /var/www/playmate -l 80
