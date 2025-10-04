@@ -1,29 +1,26 @@
-name: React CI/CD to AWS Lightsail
+name: Vite React CI/CD to Lightsail
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
-      - name: Checkout repo
+      # 1️⃣ Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2️⃣ Setup Node.js
+      # 2️⃣ Setup Node.js 24
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 24
 
-      # 3️⃣ Cache Node modules for faster builds
+      # 3️⃣ Cache node_modules
       - name: Cache Node modules
         uses: actions/cache@v3
         with:
@@ -36,32 +33,33 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # 5️⃣ Run tests (optional)
-      - name: Run tests
-        run: npm test -- --watchAll=false
-
-      # 6️⃣ Build the React app
-      - name: Build React App
+      # 5️⃣ Build Vite project
+      - name: Build Vite React App
         run: npm run build
 
-      # 7️⃣ Deploy to AWS Lightsail via SSH
+      # 6️⃣ Deploy to AWS Lightsail via SSH
       - name: Deploy to Lightsail
         uses: appleboy/ssh-action@v0.1.9
         with:
           host: ${{ secrets.LIGHTSAIL_IP }}
-          username: ${{ secrets.LIGHTSAIL_USER }}
+          username: ubuntu
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           port: 22
           script: |
-            # Stop existing server (if using serve or pm2)
+            # Stop previous app
             pm2 stop playmate || true
-            
-            # Remove old build
+
+            # Clean old build
             rm -rf /var/www/playmate/*
+            mkdir -p /var/www/playmate
 
             # Copy new build
-            mkdir -p /var/www/playmate
-            cp -r ./build/* /var/www/playmate/
+            cp -r ./dist/* /var/www/playmate/
+
+            # Start app with PM2 using serve
+            pm2 start --name playmate -- -s /var/www/playmate -l 80
+            pm2 save
+
 
             # Restart server
             pm2 start --name playmate -- -s /var/www/playmate -l 80
