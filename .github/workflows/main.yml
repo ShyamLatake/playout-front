@@ -51,7 +51,6 @@ jobs:
 
             # Clean old build
             rm -rf /var/www/playmate/*
-            mkdir -p /var/www/playmate
 
             # Copy new build
             cp -r ./dist/* /var/www/playmate/
