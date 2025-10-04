@@ -58,8 +58,3 @@ jobs:
 
             # Start app with PM2 using serve
             pm2 start --name playmate -- -s /var/www/playmate -l 80
-            pm2 save
-
-
-            # Restart server
-            pm2 start --name playmate -- -s /var/www/playmate -l 80
