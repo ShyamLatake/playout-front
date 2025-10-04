@@ -1,0 +1,67 @@
+name: React CI/CD to AWS Lightsail
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout code
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # 2️⃣ Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # 3️⃣ Cache Node modules for faster builds
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 4️⃣ Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 5️⃣ Run tests (optional)
+      - name: Run tests
+        run: npm test -- --watchAll=false
+
+      # 6️⃣ Build the React app
+      - name: Build React App
+        run: npm run build
+
+      # 7️⃣ Deploy to AWS Lightsail via SSH
+      - name: Deploy to Lightsail
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.LIGHTSAIL_IP }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          port: 22
+          script: |
+            # Stop existing server (if using serve or pm2)
+            pm2 stop react-app || true
+            
+            # Remove old build
+            rm -rf /var/www/react-app/*
+
+            # Copy new build
+            mkdir -p /var/www/react-app
+            cp -r ./build/* /var/www/react-app/
+
+            # Restart server
+            pm2 start serve --name react-app -- -s /var/www/react-app -l 80
