@@ -1,6 +1,6 @@
 import { auth } from '../config/firebase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.playmate.online/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.theplaymate.online/api/v1';
 
 class ApiService {
   private async getAuthToken(): Promise<string | null> {
