@@ -1,0 +1,63 @@
+name: Vite React CI/CD to Lightsail
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2️⃣ Setup Node.js (use stable LTS, 20 is safer than 24)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # 3️⃣ Cache node_modules
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 4️⃣ Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 5️⃣ Build Vite project
+      - name: Build Vite React App
+        run: npm run build
+
+      # 6️⃣ Copy dist folder to Lightsail server
+      - name: Copy dist to Lightsail
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.LIGHTSAIL_IP }}
+          username: ubuntu
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          source: "dist/*"
+          target: "/var/www/playmate/"
+
+      # 7️⃣ Restart app with PM2
+      - name: Restart PM2
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.LIGHTSAIL_IP }}
+          username: ubuntu
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          port: 22
+          script: |
+            # Restart or start app
+            pm2 restart playmate || pm2 start --name playmate 
+
+            # Save PM2 list for reboot persistence
+            pm2 save
