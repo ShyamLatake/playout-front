@@ -3,9 +3,13 @@ import { GameProvider } from './contexts/GameContext';
 import { UserProvider } from './contexts/UserContext';
 import { TurfProvider } from './contexts/TurfContext';
 import { ToastProvider } from './contexts/ToastContext';
-import BottomNavigation from './components/BottomNavigation';
+import { ResponsiveLayout } from './components/layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import DashboardRedirect from './components/DashboardRedirect';
 
 import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import GamesPage from './pages/GamesPage';
 import CreateGamePage from './pages/CreateGamePage';
 import ProfilePage from './pages/ProfilePage';
@@ -16,6 +20,7 @@ import TurfOwnerDashboard from './pages/TurfOwnerDashboard';
 import CreateTurfPage from './pages/CreateTurfPage';
 import TurfDetailPage from './pages/TurfDetailPage';
 import UserDashboard from './pages/UserDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -24,22 +29,65 @@ function App() {
         <GameProvider>
           <TurfProvider>
             <Router>
-            <div className="min-h-screen bg-gray-50 pb-20">
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/games" element={<GamesPage />} />
-                <Route path="/create" element={<CreateGamePage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/game/:id" element={<GameDetailPage />} />
-                <Route path="/turfs" element={<TurfsPage />} />
-                <Route path="/turf/:turfId" element={<TurfDetailPage />} />
-                <Route path="/turf/:turfId/book" element={<BookTurfPage />} />
-                <Route path="/turf-dashboard" element={<TurfOwnerDashboard />} />
-                <Route path="/create-turf" element={<CreateTurfPage />} />
-                <Route path="/my-dashboard" element={<UserDashboard />} />
-              </Routes>
-              <BottomNavigation />
-            </div>
+              <ResponsiveLayout>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/dashboard" element={<DashboardRedirect />} />
+                  <Route path="/games" element={<GamesPage />} />
+                  <Route path="/turfs" element={<TurfsPage />} />
+                  <Route path="/game/:id" element={<GameDetailPage />} />
+                  <Route path="/turf/:turfId" element={<TurfDetailPage />} />
+                  
+                  {/* Protected Routes - Require Authentication */}
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/create" element={
+                    <ProtectedRoute allowedUserTypes={['normal_user']}>
+                      <CreateGamePage />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/turf/:turfId/book" element={
+                    <ProtectedRoute>
+                      <BookTurfPage />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* User Dashboard - Normal Users Only */}
+                  <Route path="/my-dashboard" element={
+                    <ProtectedRoute allowedUserTypes={['normal_user']}>
+                      <UserDashboard />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Turf Owner Routes */}
+                  <Route path="/turf-dashboard" element={
+                    <ProtectedRoute allowedUserTypes={['turf_owner']}>
+                      <TurfOwnerDashboard />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/create-turf" element={
+                    <ProtectedRoute allowedUserTypes={['turf_owner']}>
+                      <CreateTurfPage />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Admin Routes */}
+                  <Route path="/admin-dashboard" element={
+                    <ProtectedRoute allowedUserTypes={['admin']}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } />
+                </Routes>
+              </ResponsiveLayout>
             </Router>
           </TurfProvider>
         </GameProvider>

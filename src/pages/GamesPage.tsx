@@ -14,6 +14,7 @@ const GamesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({});
+  const [sortBy, setSortBy] = useState<'date' | 'players' | 'price' | 'newest'>('date');
 
   const sports: { value: Sport; label: string; icon: React.ReactNode; color: string }[] = [
     { value: 'cricket', label: 'Cricket', icon: <Activity className="w-4 h-4" />, color: 'bg-cricket-100 text-cricket-800' },
@@ -22,8 +23,8 @@ const GamesPage: React.FC = () => {
     { value: 'badminton', label: 'Badminton', icon: <Dumbbell className="w-4 h-4" />, color: 'bg-purple-100 text-purple-800' },
   ];
 
-  const filteredGames = useMemo(() => {
-    return games.filter((game) => {
+  const filteredAndSortedGames = useMemo(() => {
+    let filtered = games.filter((game) => {
       // Search term filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -61,7 +62,25 @@ const GamesPage: React.FC = () => {
 
       return true;
     });
-  }, [games, searchTerm, filters]);
+
+    // Sort games
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'date':
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case 'players':
+          return (b.maxPlayers - b.currentPlayers) - (a.maxPlayers - a.currentPlayers);
+        case 'price':
+          const aPrice = a.perHeadContribution || 0;
+          const bPrice = b.perHeadContribution || 0;
+          return aPrice - bPrice;
+        case 'newest':
+          return new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime();
+        default:
+          return 0;
+      }
+    });
+  }, [games, searchTerm, filters, sortBy]);
 
   const clearFilters = () => {
     setFilters({});
@@ -200,7 +219,7 @@ const GamesPage: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-semibold">
-                {filteredGames.length} {filteredGames.length === 1 ? 'Game' : 'Games'} Found
+                {filteredAndSortedGames.length} {filteredAndSortedGames.length === 1 ? 'Game' : 'Games'} Found
               </h2>
               {hasActiveFilters && (
                 <p className="text-sm text-gray-600 mt-1">
@@ -211,10 +230,15 @@ const GamesPage: React.FC = () => {
             
             {/* Sort Options */}
             <div className="relative">
-              <select className="input-field w-auto min-w-[140px] appearance-none bg-white pr-8">
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="input-field w-auto min-w-[160px] appearance-none bg-white pr-8"
+              >
                 <option value="date">Sort by Date</option>
-                <option value="players">Sort by Players</option>
-                <option value="price">Sort by Price</option>
+                <option value="players">Available Spots</option>
+                <option value="price">Price: Low to High</option>
+                <option value="newest">Newest First</option>
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,9 +249,9 @@ const GamesPage: React.FC = () => {
           </div>
 
           {/* Games Grid */}
-          {filteredGames.length > 0 ? (
+          {filteredAndSortedGames.length > 0 ? (
             <div className="space-y-4">
-              {filteredGames.map((game) => (
+              {filteredAndSortedGames.map((game) => (
                 <GameCard key={game.id} game={game} />
               ))}
             </div>

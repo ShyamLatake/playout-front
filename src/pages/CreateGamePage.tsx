@@ -62,12 +62,25 @@ const CreateGamePage: React.FC = () => {
     }
     if (!formData.date) {
       newErrors.date = 'Date is required';
+    } else {
+      const selectedDate = new Date(formData.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        newErrors.date = 'Date cannot be in the past';
+      }
     }
     if (formData.startTime >= formData.endTime) {
       newErrors.endTime = 'End time must be after start time';
     }
     if (formData.requiredPlayers > formData.maxPlayers) {
       newErrors.requiredPlayers = 'Required players cannot exceed max players';
+    }
+    if (formData.requiredPlayers < 1) {
+      newErrors.requiredPlayers = 'At least 1 additional player is required';
+    }
+    if (formData.perHeadContribution && formData.perHeadContribution < 0) {
+      newErrors.perHeadContribution = 'Contribution cannot be negative';
     }
 
     setErrors(newErrors);
@@ -301,14 +314,18 @@ const CreateGamePage: React.FC = () => {
                 <DollarSign className="w-4 h-4 inline mr-2" />
                 Per Head Contribution (Optional)
               </label>
-              <input
-                type="number"
-                value={formData.perHeadContribution || ''}
-                onChange={(e) => handleInputChange('perHeadContribution', e.target.value ? parseInt(e.target.value) : undefined)}
-                placeholder="e.g., 15"
-                min="0"
-                className="input-field"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+                <input
+                  type="number"
+                  value={formData.perHeadContribution || ''}
+                  onChange={(e) => handleInputChange('perHeadContribution', e.target.value ? parseInt(e.target.value) : undefined)}
+                  placeholder="0"
+                  min="0"
+                  className={`input-field pl-8 ${errors.perHeadContribution ? 'border-red-500' : ''}`}
+                />
+              </div>
+              {errors.perHeadContribution && <p className="text-red-500 text-sm mt-1">{errors.perHeadContribution}</p>}
               <p className="text-sm text-gray-500 mt-1">
                 Leave empty if no contribution is required
               </p>

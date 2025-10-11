@@ -3,12 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTurf } from '../contexts/TurfContext';
 import { useUser } from '../contexts/UserContext';
 
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Clock, 
-  DollarSign, 
-  MapPin, 
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  DollarSign,
+  MapPin,
   Star,
   Phone,
   MessageSquare,
@@ -35,11 +35,11 @@ const BookTurfPage: React.FC = () => {
 
   const calculateTotal = () => {
     if (!bookingData.startTime || !bookingData.endTime) return 0;
-    
+
     const start = new Date(`2000-01-01T${bookingData.startTime}`);
     const end = new Date(`2000-01-01T${bookingData.endTime}`);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    
+
     return hours > 0 ? hours * (turf?.pricePerHour || 0) : 0;
   };
 
@@ -52,7 +52,7 @@ const BookTurfPage: React.FC = () => {
       const selectedDate = new Date(bookingData.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (selectedDate < today) {
         newErrors.date = 'Cannot book for past dates';
       }
@@ -83,7 +83,7 @@ const BookTurfPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm() || !turf || !user) {
       return;
     }
@@ -99,7 +99,7 @@ const BookTurfPage: React.FC = () => {
         message: bookingData.message,
         status: 'pending'
       });
-      
+
       setShowConfirmation(true);
     } catch (error) {
       console.error('Error creating booking request:', error);
@@ -331,7 +331,7 @@ const BookTurfPage: React.FC = () => {
             </button>
 
             <p className="text-xs text-gray-500 text-center">
-              Your booking request will be sent to the turf owner for approval. 
+              Your booking request will be sent to the turf owner for approval.
               You'll be notified once it's confirmed.
             </p>
           </form>

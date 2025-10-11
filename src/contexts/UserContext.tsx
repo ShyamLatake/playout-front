@@ -3,12 +3,13 @@ import { User, UserType } from '../types';
 import { auth } from '../config/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { apiService } from '../services/api';
+import { getFirebaseUserInfo } from '../utils/firebase';
 
 interface UserContextType {
   user: User | null;
-  login: (email: string, password: string, userType?: UserType) => Promise<void>;
+  login: (email: string, password: string, userType?: UserType) => Promise<User>;
   logout: () => void;
-  register: (userData: Partial<User> & { password: string; userType: UserType }) => Promise<void>;
+  register: (userData: Partial<User> & { password: string; userType: UserType }) => Promise<User>;
   switchUserType: (userType: UserType) => void;
   isLoading: boolean;
 }
@@ -53,7 +54,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, _userType?: UserType) => {
     setIsLoading(true);
     try {
       // Firebase login
@@ -62,7 +63,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       
       // Send token to backend for verification and user data
       const response = await apiService.login(idToken) as any;
-      setUser(response.data?.user);
+      const userData = response.data?.user;
+      setUser(userData);
+      
+      // Return user data for redirect logic
+      return userData;
     } catch (error) {
       console.error('Login error:', error);
       throw new Error('Login failed');
@@ -86,13 +91,51 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const { password, ...registrationData } = userData;
       
       // Create Firebase user
-      await createUserWithEmailAndPassword(auth, userData.email!, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, userData.email!, password);
+      const firebaseUser = userCredential.user;
+      
+      // Get Firebase ID token
+      const idToken = await firebaseUser.getIdToken();
+      
+      // Get Firebase user information
+      const firebaseInfo = getFirebaseUserInfo(firebaseUser);
+      
+      // Prepare registration data with Firebase UID and additional info
+      const registrationPayload = {
+        ...registrationData,
+        ...firebaseInfo,
+        idToken: idToken
+      };
+      
+      console.log('Registration payload:', {
+        ...registrationPayload,
+        idToken: '[REDACTED]', // Don't log the actual token for security
+        firebaseId: registrationPayload.firebaseId,
+        email: registrationPayload.email,
+        emailVerified: registrationPayload.emailVerified
+      });
       
       // Register with backend
-      const response = await apiService.register(registrationData) as any;
-      setUser(response.data?.user);
+      const response = await apiService.register(registrationPayload) as any;
+      const newUser = response.data?.user;
+      setUser(newUser);
+      
+      // Return user data for redirect logic
+      return newUser;
     } catch (error) {
       console.error('Registration error:', error);
+      
+      // If Firebase user was created but backend registration failed,
+      // we should clean up the Firebase user
+      if (auth.currentUser) {
+        try {
+          await auth.currentUser.delete();
+          console.log('Cleaned up Firebase user after backend registration failure');
+        } catch (cleanupError) {
+          console.error('Failed to cleanup Firebase user:', cleanupError);
+        }
+      }
+      
       throw new Error('Registration failed');
     } finally {
       setIsLoading(false);

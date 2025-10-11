@@ -113,30 +113,32 @@ const UserDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <div className="bg-gray-50 min-h-full">
+      {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold">My Dashboard</h1>
               <p className="text-gray-600">Manage your games and requests</p>
             </div>
-            <button
-              onClick={() => navigate("/create")}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Create Game
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => navigate("/create")}
+                className="btn-primary flex items-center gap-2 justify-center"
+              >
+                <Plus className="w-4 h-4" />
+                Create Game
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stats */}
       <div className="px-4 py-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <div className="card text-center">
               <div className="text-2xl font-bold text-primary-600">
                 {organizedGames.length}
@@ -188,20 +190,18 @@ const UserDashboard: React.FC = () => {
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key as any)}
-                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === tab.key
-                        ? "border-primary-500 text-primary-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
+                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.key
+                      ? "border-primary-500 text-primary-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
                   >
                     {tab.label}
                     {tab.count > 0 && (
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          activeTab === tab.key
-                            ? "bg-primary-100 text-primary-600"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
+                        className={`px-2 py-1 rounded-full text-xs ${activeTab === tab.key
+                          ? "bg-primary-100 text-primary-600"
+                          : "bg-gray-100 text-gray-600"
+                          }`}
                       >
                         {tab.count}
                       </span>
@@ -524,13 +524,12 @@ const UserDashboard: React.FC = () => {
                                 </div>
                                 <div className="text-right">
                                   <span
-                                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                                      myRequest.status === "pending"
-                                        ? "bg-yellow-100 text-yellow-800"
-                                        : myRequest.status === "approved"
+                                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${myRequest.status === "pending"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : myRequest.status === "approved"
                                         ? "bg-green-100 text-green-800"
                                         : "bg-red-100 text-red-800"
-                                    }`}
+                                      }`}
                                   >
                                     {myRequest.status}
                                   </span>
