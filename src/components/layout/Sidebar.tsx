@@ -124,7 +124,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
     if (user?.userType === 'turf_owner') {
       return [
-        ...baseItems,
         {
           path: '/turf-dashboard',
           label: 'Dashboard',
