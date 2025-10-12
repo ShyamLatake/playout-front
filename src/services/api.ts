@@ -26,10 +26,33 @@ class ApiService {
       ...options,
     };
 
+    // Debug logging - remove in production
+    console.log('🔍 API Request Debug:', {
+      url: `${API_BASE_URL}${endpoint}`,
+      method: options.method || 'GET',
+      hasToken: !!token,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token',
+      headers: config.headers,
+      body: options.body ? JSON.parse(options.body as string) : undefined
+    });
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    
+    // Debug response
+    console.log('📡 API Response Debug:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      url: response.url
+    });
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('❌ API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData
+      });
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
@@ -127,7 +150,7 @@ class ApiService {
 
   async getMyTurfs(params?: any) {
     const queryString = params ? `?${new URLSearchParams(params)}` : '';
-    return this.request(`/turfs/my${queryString}`);
+    return this.request(`/turfs/owner/my-turfs${queryString}`);
   }
 
   async uploadTurfImages(id: string, images: string[]) {
@@ -251,6 +274,50 @@ class ApiService {
   async getMyBookings(params?: any) {
     const queryString = params ? `?${new URLSearchParams(params)}` : '';
     return this.request(`/bookings/my${queryString}`);
+  }
+
+  // Analytics endpoints
+  async getDashboardAnalytics(params?: any) {
+    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    return this.request(`/analytics/dashboard${queryString}`);
+  }
+
+  async getTurfAnalytics(turfId: string, params?: any) {
+    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    return this.request(`/analytics/turf/${turfId}${queryString}`);
+  }
+
+  async getRevenueAnalytics(params?: any) {
+    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    return this.request(`/analytics/revenue${queryString}`);
+  }
+
+  async getCustomerAnalytics(params?: any) {
+    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    return this.request(`/analytics/customers${queryString}`);
+  }
+
+  async generateAnalytics(data: any) {
+    return this.request('/analytics/generate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Debug endpoints
+  async debugAuth() {
+    return this.request('/debug/auth');
+  }
+
+  async debugTurfOwner() {
+    return this.request('/debug/turf-owner');
+  }
+
+  async debugEcho(data: any) {
+    return this.request('/debug/echo', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 }
 

@@ -21,6 +21,8 @@ import CreateTurfPage from './pages/CreateTurfPage';
 import TurfDetailPage from './pages/TurfDetailPage';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import { TurfManagement } from './pages/TurfManagement';
+import { DebugPage } from './pages/DebugPage';
 
 function App() {
   return (
@@ -79,6 +81,15 @@ function App() {
                       <CreateTurfPage />
                     </ProtectedRoute>
                   } />
+                  
+                  <Route path="/turf-management" element={
+                    <ProtectedRoute allowedUserTypes={['turf_owner']}>
+                      <TurfManagement />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Debug Route - Remove in production */}
+                  <Route path="/debug" element={<DebugPage />} />
                   
                   {/* Admin Routes */}
                   <Route path="/admin-dashboard" element={
