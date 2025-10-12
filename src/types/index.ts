@@ -278,3 +278,111 @@ export type ReportReason =
   | 'other';
 
 export type ReportStatus = 'pending' | 'investigating' | 'resolved' | 'dismissed';
+
+// Analytics interfaces
+export interface AnalyticsMetrics {
+  totalBookings: number;
+  totalRevenue: number;
+  totalHours: number;
+  averageBookingValue: number;
+  occupancyRate: number;
+  peakHours: PeakHour[];
+  sportBreakdown: SportBreakdown[];
+  customerMetrics: CustomerMetrics;
+}
+
+export interface PeakHour {
+  hour: number;
+  bookings: number;
+}
+
+export interface SportBreakdown {
+  sport: Sport;
+  bookings: number;
+  revenue: number;
+}
+
+export interface CustomerMetrics {
+  newCustomers: number;
+  returningCustomers: number;
+  totalUniqueCustomers: number;
+}
+
+export interface Analytics {
+  id: string;
+  turfId: string;
+  ownerId: string;
+  date: Date;
+  metrics: AnalyticsMetrics;
+  period: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DashboardAnalytics {
+  currentPeriod: {
+    totalBookings: number;
+    totalRevenue: number;
+    totalHours: number;
+    totalUniqueCustomers: number;
+    averageBookingValue: number;
+  };
+  changes: {
+    bookings: number;
+    revenue: number;
+    hours: number;
+    customers: number;
+  };
+  period: string;
+  dateRange: {
+    start: Date;
+    end: Date;
+  };
+}
+
+export interface TurfAnalytics {
+  turf: {
+    id: string;
+    name: string;
+    location: string;
+  };
+  analytics: Analytics[];
+  summary: {
+    peakHours: PeakHour[];
+    sportBreakdown: SportBreakdown[];
+    totalDays: number;
+    period: string;
+  };
+}
+
+export interface RevenueAnalytics {
+  revenueData: {
+    month: string;
+    revenue: number;
+    bookings: number;
+    hours: number;
+  }[];
+  totals: {
+    totalRevenue: number;
+    totalBookings: number;
+    totalHours: number;
+    averageMonthlyRevenue: number;
+    averageBookingValue: number;
+  };
+  period: string;
+}
+
+export interface CustomerAnalytics {
+  customerData: {
+    date: Date;
+    newCustomers: number;
+    returningCustomers: number;
+    totalUniqueCustomers: number;
+  }[];
+  summary: {
+    totalNewCustomers: number;
+    totalReturningCustomers: number;
+    retentionRate: number;
+    period: string;
+  };
+}
