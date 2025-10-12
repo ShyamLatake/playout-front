@@ -1,42 +1,44 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUser } from "../contexts/UserContext";
 import { useGame } from "../contexts/GameContext";
+import { useToast } from "../contexts/ToastContext";
 import { Sport } from "../types";
 import {
-  LogIn,
-  UserPlus,
   LogOut,
   Star,
   Trophy,
   Calendar,
   MapPin,
   Edit3,
+  User,
+  Mail,
+  Phone,
+  Save,
+  X,
 } from "lucide-react";
 
 const ProfilePage: React.FC = () => {
-  const { user, login, logout, register, isLoading } = useUser();
+  const navigate = useNavigate();
+  const { user, logout, isLoading } = useUser();
   const { games } = useGame();
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [showLoginForm, setShowLoginForm] = useState(!user);
+  const { showToast } = useToast();
+  const [showEditForm, setShowEditForm] = useState(false);
 
-  // Login form state
-  const [loginData, setLoginData] = useState({
-    email: "",
-    password: "",
-  });
-
-  // Register form state
-  const [registerData, setRegisterData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    sports: [] as Sport[],
-    userType: "normal_user" as "normal_user" | "turf_owner",
+  // Edit form state
+  const [editData, setEditData] = useState({
+    name: user?.name || "",
+    phone: user?.phone || "",
+    sports: user?.sports || [] as Sport[],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
 
   const sports: { value: Sport; label: string; color: string }[] = [
     {
@@ -57,64 +59,40 @@ const ProfilePage: React.FC = () => {
     },
   ];
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrors({});
-
-    if (!loginData.email || !loginData.password) {
-      setErrors({ general: "Please fill in all fields" });
-      return;
-    }
-
+  const handleLogout = async () => {
     try {
-      // Determine user type based on email
-      const userType =
-        loginData.email === "owner@example.com" ? "turf_owner" : "normal_user";
-      await login(loginData.email, loginData.password, userType);
-      setShowLoginForm(false);
+      await logout();
+      showToast({ type: 'success', title: 'Logged out successfully' });
+      navigate('/');
     } catch (error) {
-      setErrors({ general: "Login failed. Please check your credentials." });
+      console.error('Logout error:', error);
+      showToast({ type: 'error', title: 'Error logging out' });
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
-    // Validation
-    if (
-      !registerData.name ||
-      !registerData.email ||
-      !registerData.password ||
-      !registerData.confirmPassword
-    ) {
-      setErrors({ general: "Please fill in all required fields" });
-      return;
-    }
-
-    if (registerData.password !== registerData.confirmPassword) {
-      setErrors({ confirmPassword: "Passwords do not match" });
-      return;
-    }
-
-    if (registerData.password.length < 6) {
-      setErrors({ password: "Password must be at least 6 characters" });
+    if (!editData.name.trim()) {
+      setErrors({ name: "Name is required" });
       return;
     }
 
     try {
-      await register({
-        ...registerData,
-        userType: registerData.userType || "normal_user",
-      });
-      setShowLoginForm(false);
+      // Here you would call an API to update the user profile
+      // await updateProfile(editData);
+      showToast({ type: 'success', title: 'Profile updated successfully!' });
+      setShowEditForm(false);
     } catch (error) {
-      setErrors({ general: "Registration failed. Please try again." });
+      console.error('Update error:', error);
+      showToast({ type: 'error', title: 'Failed to update profile' });
+      setErrors({ general: "Failed to update profile. Please try again." });
     }
   };
 
   const toggleSport = (sport: Sport) => {
-    setRegisterData((prev) => ({
+    setEditData((prev) => ({
       ...prev,
       sports: prev.sports.includes(sport)
         ? prev.sports.filter((s) => s !== sport)
@@ -128,12 +106,19 @@ const ProfilePage: React.FC = () => {
       game.organizerId === user?.id
   );
 
-  if (user && !showLoginForm) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-6">
-          <div className="max-w-4xl mx-auto">
+  const organizedGames = games.filter(game => game.organizerId === user?.id);
+  const joinedGames = games.filter(game => 
+    game.players.some(player => player.userId === user?.id) && game.organizerId !== user?.id
+  );
+  const upcomingGames = userGames.filter(game => new Date(game.date) > new Date());
+  const completedGames = userGames.filter(game => new Date(game.date) <= new Date());
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-2xl font-bold">
                 {user.name.charAt(0).toUpperCase()}
@@ -146,107 +131,25 @@ const ProfilePage: React.FC = () => {
                   <span className="text-sm font-medium">
                     {user.rating} rating
                   </span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-sm text-gray-600 capitalize">
+                    {user.userType.replace('_', ' ')}
+                  </span>
                 </div>
               </div>
+            </div>
+            
+            <div className="flex gap-2">
               <button
-                onClick={() => setShowLoginForm(true)}
-                className="ml-auto p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => setShowEditForm(true)}
+                className="btn-secondary flex items-center gap-2"
               >
-                <Edit3 className="w-5 h-5" />
+                <Edit3 className="w-4 h-4" />
+                Edit Profile
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* User Stats */}
-        <div className="px-4 py-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="card text-center">
-                <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-primary-600">
-                  {userGames.length}
-                </div>
-                <div className="text-sm text-gray-600">Games Played</div>
-              </div>
-              <div className="card text-center">
-                <Calendar className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-turf-600">
-                  {userGames.filter((g) => g.organizerId === user.id).length}
-                </div>
-                <div className="text-sm text-gray-600">Games Organized</div>
-              </div>
-              <div className="card text-center">
-                <Star className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-cricket-600">
-                  {user.rating}
-                </div>
-                <div className="text-sm text-gray-600">Rating</div>
-              </div>
-              <div className="card text-center">
-                <MapPin className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-purple-600">
-                  {user.sports.length}
-                </div>
-                <div className="text-sm text-gray-600">Sports</div>
-              </div>
-            </div>
-
-            {/* Sports */}
-            <div className="card mb-6">
-              <h3 className="text-lg font-semibold mb-4">Sports I Play</h3>
-              <div className="flex flex-wrap gap-2">
-                {user.sports.map((sport) => {
-                  const sportInfo = sports.find((s) => s.value === sport);
-                  return (
-                    <span
-                      key={sport}
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${sportInfo?.color}`}
-                    >
-                      {sportInfo?.label}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Recent Games */}
-            {userGames.length > 0 && (
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Recent Games</h3>
-                <div className="space-y-3">
-                  {userGames.slice(0, 5).map((game) => (
-                    <div
-                      key={game.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div>
-                        <div className="font-medium capitalize">
-                          {game.sport}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {game.turfName}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-600">
-                          {new Date(game.date).toLocaleDateString()}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {game.startTime} - {game.endTime}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Logout Button */}
-            <div className="mt-8 text-center">
               <button
-                onClick={logout}
-                className="btn-secondary flex items-center gap-2 mx-auto"
+                onClick={handleLogout}
+                className="btn-secondary text-red-600 hover:bg-red-50 flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Logout
@@ -255,276 +158,263 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to Turf Finder
-          </h1>
-          <p className="text-gray-600">
-            Connect with players and find your perfect game
-          </p>
-        </div>
-
-        {/* Toggle Buttons */}
-        <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
-          <button
-            onClick={() => setIsLoginMode(true)}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              isLoginMode
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            <LogIn className="w-4 h-4 inline mr-2" />
-            Login
-          </button>
-          <button
-            onClick={() => setIsLoginMode(false)}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              !isLoginMode
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            <UserPlus className="w-4 h-4 inline mr-2" />
-            Register
-          </button>
-        </div>
-
-        {/* Forms */}
-        {isLoginMode ? (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={loginData.email}
-                onChange={(e) =>
-                  setLoginData((prev) => ({ ...prev, email: e.target.value }))
-                }
-                className="input-field"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                value={loginData.password}
-                onChange={(e) =>
-                  setLoginData((prev) => ({
-                    ...prev,
-                    password: e.target.value,
-                  }))
-                }
-                className="input-field"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            {errors.general && (
-              <div className="text-red-500 text-sm text-center">
-                {errors.general}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full py-3 disabled:opacity-50"
-            >
-              {isLoading ? "Logging in..." : "Login"}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                value={registerData.name}
-                onChange={(e) =>
-                  setRegisterData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                className="input-field"
-                placeholder="Enter your full name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={registerData.email}
-                onChange={(e) =>
-                  setRegisterData((prev) => ({
-                    ...prev,
-                    email: e.target.value,
-                  }))
-                }
-                className="input-field"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone (Optional)
-              </label>
-              <input
-                type="tel"
-                value={registerData.phone}
-                onChange={(e) =>
-                  setRegisterData((prev) => ({
-                    ...prev,
-                    phone: e.target.value,
-                  }))
-                }
-                className="input-field"
-                placeholder="Enter your phone number"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                value={registerData.password}
-                onChange={(e) =>
-                  setRegisterData((prev) => ({
-                    ...prev,
-                    password: e.target.value,
-                  }))
-                }
-                className="input-field"
-                placeholder="Create a password"
-                required
-              />
-              {errors.password && (
-                <div className="text-red-500 text-sm mt-1">
-                  {errors.password}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Info */}
+          <div className="lg:col-span-1">
+            <div className="card">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Profile Information
+              </h2>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  <div>
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="font-medium">{user.email}</p>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                value={registerData.confirmPassword}
-                onChange={(e) =>
-                  setRegisterData((prev) => ({
-                    ...prev,
-                    confirmPassword: e.target.value,
-                  }))
-                }
-                className="input-field"
-                placeholder="Confirm your password"
-                required
-              />
-              {errors.confirmPassword && (
-                <div className="text-red-500 text-sm mt-1">
-                  {errors.confirmPassword}
+                
+                {user.phone && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-4 h-4 text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-600">Phone</p>
+                      <p className="font-medium">{user.phone}</p>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-start gap-3">
+                  <Trophy className="w-4 h-4 text-gray-400 mt-1" />
+                  <div>
+                    <p className="text-sm text-gray-600">Sports</p>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {user.sports.length > 0 ? (
+                        user.sports.map((sport) => {
+                          const sportInfo = sports.find(s => s.value === sport);
+                          return (
+                            <span
+                              key={sport}
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                sportInfo?.color || 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {sportInfo?.label || sport}
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <span className="text-sm text-gray-500">No sports selected</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Account Type
-              </label>
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setRegisterData((prev) => ({
-                      ...prev,
-                      userType: "normal_user",
-                    }))
-                  }
-                  className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                    registerData.userType === "normal_user"
-                      ? "bg-primary-100 text-primary-800 border-primary-200"
-                      : "bg-white border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <span className="text-sm font-medium">Player</span>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Join and create games
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setRegisterData((prev) => ({
-                      ...prev,
-                      userType: "turf_owner",
-                    }))
-                  }
-                  className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                    registerData.userType === "turf_owner"
-                      ? "bg-turf-100 text-turf-800 border-turf-200"
-                      : "bg-white border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <span className="text-sm font-medium">Turf Owner</span>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Manage turfs and bookings
-                  </p>
-                </button>
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sports I Play
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {sports.map((sport) => (
+
+            {/* Quick Stats */}
+            <div className="card mt-6">
+              <h2 className="text-lg font-semibold mb-4">Quick Stats</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-primary-50 rounded-lg">
+                  <div className="text-2xl font-bold text-primary-600">{userGames.length}</div>
+                  <div className="text-sm text-gray-600">Total Games</div>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{user.rating}</div>
+                  <div className="text-sm text-gray-600">Rating</div>
+                </div>
+                <div className="text-center p-3 bg-turf-50 rounded-lg">
+                  <div className="text-2xl font-bold text-turf-600">{organizedGames.length}</div>
+                  <div className="text-sm text-gray-600">Organized</div>
+                </div>
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{upcomingGames.length}</div>
+                  <div className="text-sm text-gray-600">Upcoming</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Activity Summary */}
+            <div className="card mt-6">
+              <h2 className="text-lg font-semibold mb-4">Activity Summary</h2>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Games Organized</span>
+                  <span className="font-medium">{organizedGames.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Games Joined</span>
+                  <span className="font-medium">{joinedGames.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Completed Games</span>
+                  <span className="font-medium">{completedGames.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Success Rate</span>
+                  <span className="font-medium text-green-600">
+                    {userGames.length > 0 ? Math.round((completedGames.length / userGames.length) * 100) : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Games */}
+          <div className="lg:col-span-2">
+            <div className="card">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Recent Games
+              </h2>
+              
+              {userGames.length > 0 ? (
+                <div className="space-y-4">
+                  {userGames.slice(0, 5).map((game) => (
+                    <div
+                      key={game.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/game/${game.id}`)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                          <Trophy className="w-6 h-6 text-primary-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium capitalize">{game.sport}</h3>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <MapPin className="w-4 h-4" />
+                            {game.turfLocation}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">
+                          {new Date(game.date).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {game.startTime} - {game.endTime}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No games yet</h3>
+                  <p className="text-gray-600 mb-4">Start playing by joining or creating games</p>
                   <button
-                    key={sport.value}
-                    type="button"
-                    onClick={() => toggleSport(sport.value)}
-                    className={`p-2 rounded-lg border-2 transition-all duration-200 ${
-                      registerData.sports.includes(sport.value)
-                        ? `${sport.color} border-current`
-                        : "bg-white border-gray-200 hover:border-gray-300"
-                    }`}
+                    onClick={() => navigate('/games')}
+                    className="btn-primary"
                   >
-                    <span className="text-sm font-medium">{sport.label}</span>
+                    Browse Games
                   </button>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
-            {errors.general && (
-              <div className="text-red-500 text-sm text-center">
-                {errors.general}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full py-3 disabled:opacity-50"
-            >
-              {isLoading ? "Creating Account..." : "Create Account"}
-            </button>
-          </form>
-        )}
+          </div>
+        </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEditForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Edit Profile</h2>
+              <button
+                onClick={() => setShowEditForm(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              {errors.general && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-600 text-sm">{errors.general}</p>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={editData.name}
+                  onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                    errors.name ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                />
+                {errors.name && (
+                  <p className="text-red-600 text-sm mt-1">{errors.name}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={editData.phone}
+                  onChange={(e) => setEditData(prev => ({ ...prev, phone: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sports Interests
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {sports.map((sport) => (
+                    <button
+                      key={sport.value}
+                      type="button"
+                      onClick={() => toggleSport(sport.value)}
+                      className={`p-2 text-sm rounded-lg border transition-colors ${
+                        editData.sports.includes(sport.value)
+                          ? 'border-primary-500 bg-primary-50 text-primary-700'
+                          : 'border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {sport.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 btn-primary flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditForm(false)}
+                  className="flex-1 btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

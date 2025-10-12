@@ -161,38 +161,73 @@ const GameDetailPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-gray-600">
-                <Calendar className="w-5 h-5" />
-                <span>{format(new Date(game.date), 'EEEE, MMMM dd, yyyy')}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Calendar className="w-5 h-5" />
+                  <span>{format(new Date(game.date), 'EEEE, MMMM dd, yyyy')}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Clock className="w-5 h-5" />
+                  <span>{game.startTime} - {game.endTime}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <MapPin className="w-5 h-5" />
+                  <span>{game.turfLocation}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <Clock className="w-5 h-5" />
-                <span>{game.startTime} - {game.endTime}</span>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Users className="w-5 h-5" />
+                  <span>{game.currentPlayers}/{game.maxPlayers} players</span>
+                  <div className="flex-1 bg-gray-200 rounded-full h-2 ml-2">
+                    <div 
+                      className="bg-turf-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(game.currentPlayers / game.maxPlayers) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+                {game.perHeadContribution && (
+                  <div className="flex items-center gap-2 text-turf-600">
+                    <DollarSign className="w-5 h-5" />
+                    <span className="font-medium">₹{game.perHeadContribution} per head</span>
+                  </div>
+                )}
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">Need:</span> {game.requiredPlayers} more players
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <MapPin className="w-5 h-5" />
-                <span>{game.turfLocation}</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <Users className="w-5 h-5" />
-                <span>{game.currentPlayers}/{game.maxPlayers} players</span>
-              </div>
-              {game.perHeadContribution && (
-                <div className="flex items-center gap-2 text-turf-600">
-                  <DollarSign className="w-5 h-5" />
-                  <span className="font-medium">₹{game.perHeadContribution} per head</span>
+              
+              {game.description && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-700">{game.description}</p>
                 </div>
               )}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Organized by:</span> {game.organizerName}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">
-                <span className="font-medium">Need:</span> {game.requiredPlayers} more players
-              </p>
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Organized by:</span> {game.organizerName}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Created {format(new Date(game.createdAt || game.date), 'MMM dd, yyyy')}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                    game.status === 'open' ? 'bg-green-100 text-green-800' :
+                    game.status === 'full' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {game.status === 'open' ? 'Open for Join' : 
+                     game.status === 'full' ? 'Full' : 'Closed'}
+                  </div>
+                </div>
+              </div>
+              
+
             </div>
           </div>
 

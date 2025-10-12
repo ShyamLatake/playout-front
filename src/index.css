@@ -72,6 +72,13 @@
   @apply bg-gray-400;
 }
 
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+
+
 /* Mobile-first responsive design */
 @media (max-width: 640px) {
   .container {

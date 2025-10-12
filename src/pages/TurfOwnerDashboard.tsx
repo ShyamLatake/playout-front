@@ -83,29 +83,31 @@ const TurfOwnerDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <div className="bg-gray-50 min-h-full">
+      {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold">Turf Owner Dashboard</h1>
               <p className="text-gray-600">Manage your turfs and bookings</p>
             </div>
-            <button
-              onClick={() => navigate('/create-turf')}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add New Turf
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => navigate('/create-turf')}
+                className="btn-primary flex items-center gap-2 justify-center"
+              >
+                <Plus className="w-4 h-4" />
+                Add New Turf
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stats Overview */}
       <div className="px-4 py-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="card">
               <div className="flex items-center justify-between">

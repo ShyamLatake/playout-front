@@ -32,6 +32,7 @@ const TurfsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<TurfFilters>({});
+  const [sortBy, setSortBy] = useState<'rating' | 'price-low' | 'price-high' | 'name'>('rating');
 
   const sports: { value: Sport; label: string; icon: React.ReactNode; color: string }[] = [
     { value: 'cricket', label: 'Cricket', icon: <Activity className="w-4 h-4" />, color: 'bg-cricket-100 text-cricket-800' },
@@ -40,8 +41,8 @@ const TurfsPage: React.FC = () => {
     { value: 'badminton', label: 'Badminton', icon: <Dumbbell className="w-4 h-4" />, color: 'bg-purple-100 text-purple-800' },
   ];
 
-  const filteredTurfs = useMemo(() => {
-    return turfs.filter((turf) => {
+  const filteredAndSortedTurfs = useMemo(() => {
+    let filtered = turfs.filter((turf) => {
       // Search term filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -77,7 +78,23 @@ const TurfsPage: React.FC = () => {
       // Only show available turfs
       return turf.isAvailable;
     });
-  }, [turfs, searchTerm, filters]);
+
+    // Sort turfs
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'rating':
+          return b.rating - a.rating;
+        case 'price-low':
+          return a.pricePerHour - b.pricePerHour;
+        case 'price-high':
+          return b.pricePerHour - a.pricePerHour;
+        case 'name':
+          return a.name.localeCompare(b.name);
+        default:
+          return 0;
+      }
+    });
+  }, [turfs, searchTerm, filters, sortBy]);
 
   const clearFilters = () => {
     setFilters({});
@@ -228,7 +245,7 @@ const TurfsPage: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-semibold">
-                {filteredTurfs.length} {filteredTurfs.length === 1 ? 'Turf' : 'Turfs'} Found
+                {filteredAndSortedTurfs.length} {filteredAndSortedTurfs.length === 1 ? 'Turf' : 'Turfs'} Found
               </h2>
               {hasActiveFilters && (
                 <p className="text-sm text-gray-600 mt-1">
@@ -239,7 +256,11 @@ const TurfsPage: React.FC = () => {
             
             {/* Sort Options */}
             <div className="relative">
-              <select className="input-field w-auto min-w-[160px] appearance-none bg-white pr-8">
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="input-field w-auto min-w-[160px] appearance-none bg-white pr-8"
+              >
                 <option value="rating">Sort by Rating</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
@@ -254,9 +275,9 @@ const TurfsPage: React.FC = () => {
           </div>
 
           {/* Turfs Grid */}
-          {filteredTurfs.length > 0 ? (
+          {filteredAndSortedTurfs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredTurfs.map((turf) => (
+              {filteredAndSortedTurfs.map((turf) => (
                 <div key={turf.id} className="card hover:shadow-lg transition-shadow duration-200">
                   {/* Turf Image */}
                   <div className="h-48 bg-gradient-to-br from-turf-400 to-turf-600 rounded-lg mb-4 flex items-center justify-center">
