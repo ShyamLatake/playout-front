@@ -44,7 +44,7 @@ export const getFirebaseUserInfo = (firebaseUser: FirebaseUser) => {
 export const validateFirebaseToken = async (token: string): Promise<boolean> => {
   try {
     // This is a basic validation - in a real app, you might want to verify with Firebase Admin SDK
-    return token && token.length > 0;
+    return token.length > 0;
   } catch (error) {
     console.error('Error validating Firebase token:', error);
     return false;

@@ -86,14 +86,14 @@ export const TurfForm: React.FC<TurfFormProps> = ({
         ...(images.length > 0 && { images })
       };
 
-      let result;
+      let result: any;
       if (isEditing && turfId) {
         result = await apiService.updateTurf(turfId, turfData);
       } else {
         result = await apiService.createTurf({ ...turfData, images });
       }
 
-      onSuccess?.(result.data.turf);
+      onSuccess?.(result?.data?.turf ?? result?.turf ?? result);
     } catch (error) {
       console.error('Error saving turf:', error);
       setErrors({ submit: error instanceof Error ? error.message : 'Failed to save turf' });

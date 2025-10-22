@@ -85,7 +85,7 @@ export const AuthDebugger: React.FC = () => {
       const result = await apiService.createTurf(testTurf);
       console.log('✅ Turf creation successful:', result);
       setApiTest({ success: true, data: result });
-    } catch (error) {
+    } catch (error :  any)   {
       console.error('❌ Turf creation failed:', error);
       setApiTest({ success: false, error: error.message });
     }
@@ -95,7 +95,7 @@ export const AuthDebugger: React.FC = () => {
     try {
       const result = await apiService.getTurfs();
       setApiTest({ success: true, data: result, type: 'get' });
-    } catch (error) {
+    } catch (error :  any) {
       setApiTest({ success: false, error: error.message, type: 'get' });
     }
   };
@@ -169,7 +169,7 @@ export const AuthDebugger: React.FC = () => {
             try {
               const result = await apiService.debugAuth();
               setApiTest({ success: true, data: result, type: 'debug-auth' });
-            } catch (error) {
+            } catch (error :  any) {
               setApiTest({ success: false, error: error.message, type: 'debug-auth' });
             }
           }}
@@ -183,7 +183,7 @@ export const AuthDebugger: React.FC = () => {
             try {
               const result = await apiService.debugTurfOwner();
               setApiTest({ success: true, data: result, type: 'debug-turf-owner' });
-            } catch (error) {
+            } catch (error :  any) {
               setApiTest({ success: false, error: error.message, type: 'debug-turf-owner' });
             }
           }}
