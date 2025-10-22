@@ -59,18 +59,20 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-[100]">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left section */}
           <div className="flex items-center gap-4">
-            {/* Mobile menu button */}
-            <button
-              onClick={onToggleSidebar}
-              className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              {showSidebar ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            {/* Mobile menu button - Only show when user is logged in */}
+            {user && (
+              <button
+                onClick={onToggleSidebar}
+                className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                {showSidebar ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            )}
 
             {/* Logo and title */}
             <div className="flex items-center gap-3">
@@ -140,7 +142,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
 
                 {/* Notifications dropdown */}
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[110]">
                     <div className="px-4 py-2 border-b border-gray-100">
                       <h3 className="font-semibold text-gray-900">Notifications</h3>
                     </div>
@@ -205,7 +207,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
 
                 {/* Profile dropdown */}
                 {showProfileMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[110]">
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="font-medium text-gray-900">{user.name}</p>
                       <p className="text-sm text-gray-500">{user.email}</p>
@@ -309,19 +311,21 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
         </div>
       </div>
 
-      {/* Mobile search */}
-      <div className="md:hidden px-4 pb-4">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
+      {/* Mobile search - Only show when user is logged in */}
+      {/* {user && (
+        <div className="md:hidden px-4 pb-4">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
         </div>
-      </div>
+      )} */}
     </header>
   );
 };
