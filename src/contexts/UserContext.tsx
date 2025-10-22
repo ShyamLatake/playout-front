@@ -42,7 +42,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           const response = await apiService.login(idToken) as any;
           setUser(response.data?.user);
         } catch (error) {
-          console.error('Error getting user data:', error);
           setUser(null);
         }
       } else {
@@ -69,7 +68,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // Return user data for redirect logic
       return userData;
     } catch (error) {
-      console.error('Login error:', error);
       throw new Error('Login failed');
     } finally {
       setIsLoading(false);
@@ -81,7 +79,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       await signOut(auth);
       setUser(null);
     } catch (error) {
-      console.error('Logout error:', error);
+      // Silent error handling
     }
   };
 
@@ -107,13 +105,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         idToken: idToken
       };
       
-      console.log('Registration payload:', {
-        ...registrationPayload,
-        idToken: '[REDACTED]', // Don't log the actual token for security
-        firebaseId: registrationPayload.firebaseId,
-        email: registrationPayload.email,
-        emailVerified: registrationPayload.emailVerified
-      });
+
       
       // Register with backend
       const response = await apiService.register(registrationPayload) as any;
@@ -123,16 +115,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // Return user data for redirect logic
       return newUser;
     } catch (error) {
-      console.error('Registration error:', error);
       
       // If Firebase user was created but backend registration failed,
       // we should clean up the Firebase user
       if (auth.currentUser) {
         try {
           await auth.currentUser.delete();
-          console.log('Cleaned up Firebase user after backend registration failure');
         } catch (cleanupError) {
-          console.error('Failed to cleanup Firebase user:', cleanupError);
+          // Silent cleanup failure
         }
       }
       
@@ -150,7 +140,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const response = await apiService.updateProfile({ userType }) as any;
       setUser(response.data?.user);
     } catch (error) {
-      console.error('Error switching user type:', error);
       throw new Error('Failed to switch user type');
     }
   };

@@ -5,6 +5,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import BottomNavigation from '../BottomNavigation';
+import DevelopmentBanner from '../DevelopmentBanner';
 
 interface ResponsiveLayoutProps {
   children: React.ReactNode;
@@ -112,6 +113,9 @@ const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({ children }) => {
 
   return (
     <div className={getLayoutClasses()}>
+      {/* Development Banner - Show only when user is not logged in */}
+      {!user && <DevelopmentBanner />}
+      
       {/* Header - Always visible except on full-width pages */}
       {!isFullWidth && (
         <Header 
