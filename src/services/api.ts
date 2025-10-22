@@ -26,33 +26,10 @@ class ApiService {
       ...options,
     };
 
-    // Debug logging - remove in production
-    console.log('🔍 API Request Debug:', {
-      url: `${API_BASE_URL}${endpoint}`,
-      method: options.method || 'GET',
-      hasToken: !!token,
-      tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token',
-      headers: config.headers,
-      body: options.body ? JSON.parse(options.body as string) : undefined
-    });
-
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    
-    // Debug response
-    console.log('📡 API Response Debug:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      url: response.url
-    });
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('❌ API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorData
-      });
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 

@@ -62,10 +62,10 @@ const Footer: React.FC = () => {
   ];
 
   const socialLinks = [
-    { icon: Facebook, href: 'https://facebook.com/turffinder', label: 'Facebook' },
-    { icon: Twitter, href: 'https://twitter.com/turffinder', label: 'Twitter' },
-    { icon: Instagram, href: 'https://instagram.com/turffinder', label: 'Instagram' },
-    { icon: Youtube, href: 'https://youtube.com/turffinder', label: 'YouTube' },
+    { icon: Facebook, href: 'https://facebook.com/playmate', label: 'Facebook' },
+    { icon: Twitter, href: 'https://twitter.com/playmate', label: 'Twitter' },
+    { icon: Instagram, href: 'https://instagram.com/playmate', label: 'Instagram' },
+    { icon: Youtube, href: 'https://youtube.com/playmate', label: 'YouTube' },
   ];
 
   return (
@@ -77,16 +77,16 @@ const Footer: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">TF</span>
+                <span className="text-white font-bold">PM</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold">TurfFinder</h3>
+                <h3 className="text-xl font-bold">Playmate</h3>
                 <p className="text-sm text-gray-400">Find your game</p>
               </div>
             </div>
-            
+
             <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-              Connect with players, discover turfs, and organize games in your area. 
+              Connect with players, discover turfs, and organize games in your area.
               The ultimate platform for sports enthusiasts.
             </p>
 
@@ -94,7 +94,7 @@ const Footer: React.FC = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-sm text-gray-400">
                 <MapPin className="w-4 h-4 text-primary-500" />
-                <span>Mumbai, Maharashtra, India</span>
+                <span>Pune, Maharashtra, India</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-400">
                 <Phone className="w-4 h-4 text-primary-500" />
@@ -102,7 +102,7 @@ const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-400">
                 <Mail className="w-4 h-4 text-primary-500" />
-                <span>support@turffinder.com</span>
+                <span>support@playmate.online</span>
               </div>
             </div>
           </div>
@@ -140,7 +140,7 @@ const Footer: React.FC = () => {
                 Get the latest updates on new turfs, games, and features.
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="email"
@@ -182,15 +182,15 @@ const Footer: React.FC = () => {
             {/* Platform stats */}
             <div className="grid grid-cols-3 gap-4 text-center lg:text-right">
               <div>
-                <div className="text-2xl font-bold text-primary-500">1.2K+</div>
+                <div className="text-2xl font-bold text-primary-500">0+</div>
                 <div className="text-xs text-gray-400">Active Users</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-primary-500">89</div>
+                <div className="text-2xl font-bold text-primary-500">0</div>
                 <div className="text-xs text-gray-400">Turfs Listed</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-primary-500">2.1K+</div>
+                <div className="text-2xl font-bold text-primary-500">0+</div>
                 <div className="text-xs text-gray-400">Games Played</div>
               </div>
             </div>
@@ -203,11 +203,11 @@ const Footer: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 text-sm text-gray-400">
-              <span>© {currentYear} TurfFinder. Made with</span>
+              <span>© {currentYear} Playmate. Made with</span>
               <Heart className="w-4 h-4 text-red-500 fill-current" />
               <span>for sports enthusiasts.</span>
             </div>
-            
+
             <div className="flex items-center gap-6 text-sm text-gray-400">
               <button
                 onClick={() => navigate('/privacy')}

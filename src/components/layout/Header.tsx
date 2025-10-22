@@ -31,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Calculate notifications count
-  const notificationsCount = user ? games.filter(game => 
+  const notificationsCount = user ? games.filter(game =>
     game.organizerId === user.id && game.requests.length > 0
   ).reduce((sum, game) => sum + game.requests.length, 0) : 0;
 
@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
       await logout();
       navigate('/');
     } catch (error) {
-      console.error('Error logging out:', error);
+      // Silent error handling
     }
   };
 
@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
     if (path === '/profile') return 'Profile';
     if (path === '/create') return 'Create Game';
     if (path === '/create-turf') return 'Create Turf';
-    return 'TurfFinder';
+    return 'Playmate';
   };
 
   return (
@@ -75,7 +75,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
             {/* Logo and title */}
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">TF</span>
+                <span className="text-white font-bold text-sm">PM</span>
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-gray-900">{getPageTitle()}</h1>
@@ -84,7 +84,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
           </div>
 
           {/* Center section - Search */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-8">
+          {/* <div className="hidden md:flex flex-1 max-w-lg mx-8">
             <div className="relative w-full">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -95,7 +95,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
-          </div>
+          </div> */}
 
           {/* Right section */}
           <div className="flex items-center gap-3">
@@ -210,7 +210,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                       <p className="font-medium text-gray-900">{user.name}</p>
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
-                    
+
                     <div className="py-2">
                       <button
                         onClick={() => {
@@ -222,7 +222,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                         <User className="w-4 h-4" />
                         Profile
                       </button>
-                      
+
                       {user.userType === 'normal_user' && (
                         <button
                           onClick={() => {
@@ -235,7 +235,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                           My Dashboard
                         </button>
                       )}
-                      
+
                       {user.userType === 'turf_owner' && (
                         <button
                           onClick={() => {
@@ -248,7 +248,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                           Turf Dashboard
                         </button>
                       )}
-                      
+
                       {user.userType === 'admin' && (
                         <button
                           onClick={() => {
@@ -261,7 +261,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                           Admin Dashboard
                         </button>
                       )}
-                      
+
                       <button
                         onClick={() => {
                           navigate('/settings');
@@ -273,7 +273,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                         Settings
                       </button>
                     </div>
-                    
+
                     <div className="border-t border-gray-100 pt-2">
                       <button
                         onClick={() => {
