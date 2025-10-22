@@ -15,13 +15,11 @@ import {
   Phone,
   FileText,
   Settings,
-  Camera,
   Users,
   Wifi,
   Car,
   Shield,
   Star,
-  Calendar,
   Info
 } from 'lucide-react';
 
