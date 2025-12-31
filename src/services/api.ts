@@ -1,6 +1,7 @@
-import { auth } from '../config/firebase';
+import { auth } from "../config/firebase";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
 class ApiService {
   private async getAuthToken(): Promise<string | null> {
@@ -16,10 +17,10 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<T> {
     const token = await this.getAuthToken();
-    
+
     const config: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
@@ -27,10 +28,12 @@ class ApiService {
     };
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     return response.json();
@@ -38,35 +41,51 @@ class ApiService {
 
   // Auth endpoints
   async login(idToken: string) {
-    return this.request('/auth/login', {
-      method: 'POST',
+    return this.request("/auth/login", {
+      method: "POST",
       body: JSON.stringify({ idToken }),
     });
   }
 
   async register(userData: any) {
-    return this.request('/auth/register', {
-      method: 'POST',
+    return this.request("/auth/register", {
+      method: "POST",
       body: JSON.stringify(userData),
     });
   }
 
   async updateProfile(userData: any) {
-    return this.request('/auth/profile', {
-      method: 'PUT',
+    return this.request("/auth/profile", {
+      method: "PUT",
       body: JSON.stringify(userData),
     });
   }
 
+  async getProfile() {
+    return this.request("/auth/profile");
+  }
+
+  async verifyEmail() {
+    return this.request("/auth/verify-email", {
+      method: "POST",
+    });
+  }
+
+  async resendVerification() {
+    return this.request("/auth/resend-verification", {
+      method: "POST",
+    });
+  }
+
   async deleteAccount() {
-    return this.request('/auth/profile', {
-      method: 'DELETE',
+    return this.request("/auth/account", {
+      method: "DELETE",
     });
   }
 
   // User endpoints
   async getUsers(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/users${queryString}`);
   }
 
@@ -79,25 +98,25 @@ class ApiService {
   }
 
   async getUserGames(id: string, params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/users/${id}/games${queryString}`);
   }
 
   async getUserBookings(id: string, params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/users/${id}/bookings${queryString}`);
   }
 
   async uploadAvatar(avatar: string) {
-    return this.request('/users/avatar', {
-      method: 'POST',
+    return this.request("/users/avatar", {
+      method: "POST",
       body: JSON.stringify({ avatar }),
     });
   }
 
   // Turf endpoints
   async getTurfs(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/turfs${queryString}`);
   }
 
@@ -106,50 +125,50 @@ class ApiService {
   }
 
   async createTurf(turfData: any) {
-    return this.request('/turfs', {
-      method: 'POST',
+    return this.request("/turfs", {
+      method: "POST",
       body: JSON.stringify(turfData),
     });
   }
 
   async updateTurf(id: string, turfData: any) {
     return this.request(`/turfs/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(turfData),
     });
   }
 
   async deleteTurf(id: string) {
     return this.request(`/turfs/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   async getMyTurfs(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/turfs/owner/my-turfs${queryString}`);
   }
 
   async uploadTurfImages(id: string, images: string[]) {
     return this.request(`/turfs/${id}/images`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ images }),
     });
   }
 
   async getTurfBookings(id: string, params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/turfs/${id}/bookings${queryString}`);
   }
 
   async getTurfReviews(id: string, params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/turfs/${id}/reviews${queryString}`);
   }
 
   // Game endpoints
   async getGames(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/games${queryString}`);
   }
 
@@ -158,53 +177,57 @@ class ApiService {
   }
 
   async createGame(gameData: any) {
-    return this.request('/games', {
-      method: 'POST',
+    return this.request("/games", {
+      method: "POST",
       body: JSON.stringify(gameData),
     });
   }
 
   async updateGame(id: string, gameData: any) {
     return this.request(`/games/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(gameData),
     });
   }
 
   async deleteGame(id: string) {
     return this.request(`/games/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
   async joinGame(id: string) {
     return this.request(`/games/${id}/join`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   async leaveGame(id: string) {
     return this.request(`/games/${id}/leave`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   async requestToJoin(id: string, message?: string) {
     return this.request(`/games/${id}/request`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ message }),
     });
   }
 
-  async handleJoinRequest(id: string, requestId: string, action: 'approve' | 'reject') {
+  async handleJoinRequest(
+    id: string,
+    requestId: string,
+    action: "approve" | "reject"
+  ) {
     return this.request(`/games/${id}/request`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify({ requestId, action }),
     });
   }
 
   async getMyGames(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/games/my${queryString}`);
   }
 
@@ -212,9 +235,27 @@ class ApiService {
     return this.request(`/games/${id}/requests`);
   }
 
+  // Draft endpoints
+  async saveGameDraft(gameData: any) {
+    return this.request("/games/draft", {
+      method: "POST",
+      body: JSON.stringify(gameData),
+    });
+  }
+
+  async getGameDraft() {
+    return this.request("/games/draft");
+  }
+
+  async deleteGameDraft() {
+    return this.request("/games/draft", {
+      method: "DELETE",
+    });
+  }
+
   // Booking endpoints
   async getBookings(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/bookings${queryString}`);
   }
 
@@ -223,76 +264,76 @@ class ApiService {
   }
 
   async createBooking(bookingData: any) {
-    return this.request('/bookings', {
-      method: 'POST',
+    return this.request("/bookings", {
+      method: "POST",
       body: JSON.stringify(bookingData),
     });
   }
 
   async updateBooking(id: string, bookingData: any) {
     return this.request(`/bookings/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(bookingData),
     });
   }
 
   async cancelBooking(id: string) {
     return this.request(`/bookings/${id}/cancel`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   async confirmBooking(id: string) {
     return this.request(`/bookings/${id}/confirm`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   async getMyBookings(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/bookings/my${queryString}`);
   }
 
   // Analytics endpoints
   async getDashboardAnalytics(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/analytics/dashboard${queryString}`);
   }
 
   async getTurfAnalytics(turfId: string, params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/analytics/turf/${turfId}${queryString}`);
   }
 
   async getRevenueAnalytics(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/analytics/revenue${queryString}`);
   }
 
   async getCustomerAnalytics(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : '';
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/analytics/customers${queryString}`);
   }
 
   async generateAnalytics(data: any) {
-    return this.request('/analytics/generate', {
-      method: 'POST',
+    return this.request("/analytics/generate", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
 
   // Debug endpoints
   async debugAuth() {
-    return this.request('/debug/auth');
+    return this.request("/debug/auth");
   }
 
   async debugTurfOwner() {
-    return this.request('/debug/turf-owner');
+    return this.request("/debug/turf-owner");
   }
 
   async debugEcho(data: any) {
-    return this.request('/debug/echo', {
-      method: 'POST',
+    return this.request("/debug/echo", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }

@@ -1,35 +1,195 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useGame } from '../contexts/GameContext';
-import { useUser } from '../contexts/UserContext';
-import { CreateGameForm, Sport } from '../types';
-import { Activity, Zap, Target, Dumbbell, ArrowLeft, Calendar, Clock, MapPin, Users, DollarSign, FileText } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useGame } from "../contexts/GameContext";
+import { useUser } from "../contexts/UserContext";
+import { useToast } from "../contexts/ToastContext";
+import { CreateGameForm, Sport } from "../types";
+import { apiService } from "../services/api";
+import {
+  Activity,
+  Zap,
+  Target,
+  Dumbbell,
+  ArrowLeft,
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  DollarSign,
+  FileText,
+  Save,
+} from "lucide-react";
 
 const CreateGamePage: React.FC = () => {
   const navigate = useNavigate();
   const { createGame, isLoading } = useGame();
   const { user } = useUser();
+  const { showSuccess, showInfo } = useToast();
   const [formData, setFormData] = useState<CreateGameForm>({
-    sport: 'cricket',
-    date: '',
-    startTime: '17:00',
-    endTime: '19:00',
-    turfName: '',
-    turfLocation: '',
+    sport: "cricket",
+    date: "",
+    startTime: "17:00",
+    endTime: "19:00",
+    turfName: "",
+    turfLocation: "",
     maxPlayers: 22,
     requiredPlayers: 5,
     perHeadContribution: undefined,
     isOfflineBooking: false,
-    description: '',
+    description: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedRef = useRef<string>("");
 
-  const sports: { value: Sport; label: string; icon: React.ReactNode; color: string }[] = [
-    { value: 'cricket', label: 'Cricket', icon: <Activity className="w-5 h-5" />, color: 'bg-cricket-100 text-cricket-800 border-cricket-200' },
-    { value: 'football', label: 'Football', icon: <Zap className="w-5 h-5" />, color: 'bg-football-100 text-football-800 border-football-200' },
-    { value: 'tennis', label: 'Tennis', icon: <Target className="w-5 h-5" />, color: 'bg-blue-100 text-blue-800 border-blue-200' },
-    { value: 'badminton', label: 'Badminton', icon: <Dumbbell className="w-5 h-5" />, color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  // Load draft on mount
+  useEffect(() => {
+    if (user) {
+      loadDraft();
+    }
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [user]);
+
+  // Auto-save draft when form data changes
+  useEffect(() => {
+    if (!user) return;
+
+    // Skip auto-save if form is empty (initial state)
+    const hasFormData =
+      formData.turfName || formData.turfLocation || formData.date;
+    if (!hasFormData) return;
+
+    // Clear existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    // Create a serialized version to check if data actually changed
+    const currentData = JSON.stringify(formData);
+    if (currentData === lastSavedRef.current) return;
+
+    // Auto-save after 2 seconds of no changes
+    autoSaveTimerRef.current = setTimeout(() => {
+      saveDraft(true);
+    }, 2000);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [formData, user]);
+
+  const loadDraft = async () => {
+    try {
+      const response = (await apiService.getGameDraft()) as any;
+      if (response.data?.draft) {
+        const draft = response.data.draft;
+        setFormData({
+          sport: draft.sport || "cricket",
+          date: draft.date
+            ? new Date(draft.date).toISOString().split("T")[0]
+            : "",
+          startTime: draft.startTime || "17:00",
+          endTime: draft.endTime || "19:00",
+          turfName: draft.turfName || "",
+          turfLocation: draft.turfLocation || "",
+          maxPlayers: draft.maxPlayers || 22,
+          requiredPlayers: draft.requiredPlayers || 5,
+          perHeadContribution: draft.perHeadContribution,
+          isOfflineBooking: draft.isOfflineBooking || false,
+          description: draft.description || "",
+        });
+        setHasDraft(true);
+        showInfo(
+          "Draft Loaded",
+          "Your saved draft has been loaded. You can continue editing."
+        );
+        lastSavedRef.current = JSON.stringify({
+          sport: draft.sport || "cricket",
+          date: draft.date
+            ? new Date(draft.date).toISOString().split("T")[0]
+            : "",
+          startTime: draft.startTime || "17:00",
+          endTime: draft.endTime || "19:00",
+          turfName: draft.turfName || "",
+          turfLocation: draft.turfLocation || "",
+          maxPlayers: draft.maxPlayers || 22,
+          requiredPlayers: draft.requiredPlayers || 5,
+          perHeadContribution: draft.perHeadContribution,
+          isOfflineBooking: draft.isOfflineBooking || false,
+          description: draft.description || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading draft:", error);
+    }
+  };
+
+  const saveDraft = async (isAutoSave = false) => {
+    if (!user) return;
+
+    try {
+      setIsSavingDraft(true);
+      await apiService.saveGameDraft(formData);
+      setHasDraft(true);
+      lastSavedRef.current = JSON.stringify(formData);
+      if (!isAutoSave) {
+        showSuccess(
+          "Draft Saved",
+          "Your game draft has been saved successfully."
+        );
+      }
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      if (!isAutoSave) {
+        showInfo(
+          "Save Failed",
+          "Could not save draft. Your changes are still in memory."
+        );
+      }
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const sports: {
+    value: Sport;
+    label: string;
+    icon: React.ReactNode;
+    color: string;
+  }[] = [
+    {
+      value: "cricket",
+      label: "Cricket",
+      icon: <Activity className="w-5 h-5" />,
+      color: "bg-cricket-100 text-cricket-800 border-cricket-200",
+    },
+    {
+      value: "football",
+      label: "Football",
+      icon: <Zap className="w-5 h-5" />,
+      color: "bg-football-100 text-football-800 border-football-200",
+    },
+    {
+      value: "tennis",
+      label: "Tennis",
+      icon: <Target className="w-5 h-5" />,
+      color: "bg-blue-100 text-blue-800 border-blue-200",
+    },
+    {
+      value: "badminton",
+      label: "Badminton",
+      icon: <Dumbbell className="w-5 h-5" />,
+      color: "bg-purple-100 text-purple-800 border-purple-200",
+    },
   ];
 
   const maxPlayersOptions = {
@@ -39,15 +199,18 @@ const CreateGamePage: React.FC = () => {
     badminton: [4, 2],
   };
 
-  const handleInputChange = (field: keyof CreateGameForm, value: string | number | boolean | undefined) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (
+    field: keyof CreateGameForm,
+    value: string | number | boolean | undefined
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => {
-      const newErrors = { ...prev };
-      delete newErrors[field];
-      return newErrors;
-    });
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
   };
 
@@ -55,32 +218,32 @@ const CreateGamePage: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.turfName.trim()) {
-      newErrors.turfName = 'Turf name is required';
+      newErrors.turfName = "Turf name is required";
     }
     if (!formData.turfLocation.trim()) {
-      newErrors.turfLocation = 'Turf location is required';
+      newErrors.turfLocation = "Turf location is required";
     }
     if (!formData.date) {
-      newErrors.date = 'Date is required';
+      newErrors.date = "Date is required";
     } else {
       const selectedDate = new Date(formData.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selectedDate < today) {
-        newErrors.date = 'Date cannot be in the past';
+        newErrors.date = "Date cannot be in the past";
       }
     }
     if (formData.startTime >= formData.endTime) {
-      newErrors.endTime = 'End time must be after start time';
+      newErrors.endTime = "End time must be after start time";
     }
     if (formData.requiredPlayers > formData.maxPlayers) {
-      newErrors.requiredPlayers = 'Required players cannot exceed max players';
+      newErrors.requiredPlayers = "Required players cannot exceed max players";
     }
     if (formData.requiredPlayers < 1) {
-      newErrors.requiredPlayers = 'At least 1 additional player is required';
+      newErrors.requiredPlayers = "At least 1 additional player is required";
     }
     if (formData.perHeadContribution && formData.perHeadContribution < 0) {
-      newErrors.perHeadContribution = 'Contribution cannot be negative';
+      newErrors.perHeadContribution = "Contribution cannot be negative";
     }
 
     setErrors(newErrors);
@@ -89,16 +252,23 @@ const CreateGamePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
       await createGame(formData);
-      navigate('/games');
+      // Delete draft after successful creation
+      try {
+        await apiService.deleteGameDraft();
+        setHasDraft(false);
+      } catch (error) {
+        console.error("Error deleting draft:", error);
+      }
+      navigate("/games");
     } catch (error) {
-      console.error('Error creating game:', error);
+      console.error("Error creating game:", error);
     }
   };
 
@@ -106,11 +276,10 @@ const CreateGamePage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Please login to create a game</h2>
-          <button
-            onClick={() => navigate('/profile')}
-            className="btn-primary"
-          >
+          <h2 className="text-xl font-semibold mb-2">
+            Please login to create a game
+          </h2>
+          <button onClick={() => navigate("/profile")} className="btn-primary">
             Login
           </button>
         </div>
@@ -146,11 +315,11 @@ const CreateGamePage: React.FC = () => {
                   <button
                     key={sport.value}
                     type="button"
-                    onClick={() => handleInputChange('sport', sport.value)}
+                    onClick={() => handleInputChange("sport", sport.value)}
                     className={`p-4 rounded-lg border-2 transition-all duration-200 ${
                       formData.sport === sport.value
                         ? `${sport.color} border-current`
-                        : 'bg-white border-gray-200 hover:border-gray-300'
+                        : "bg-white border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2">
@@ -172,11 +341,15 @@ const CreateGamePage: React.FC = () => {
                 <input
                   type="date"
                   value={formData.date}
-                  onChange={(e) => handleInputChange('date', e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className={`input-field ${errors.date ? 'border-red-500' : ''}`}
+                  onChange={(e) => handleInputChange("date", e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className={`input-field ${
+                    errors.date ? "border-red-500" : ""
+                  }`}
                 />
-                {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+                {errors.date && (
+                  <p className="text-red-500 text-sm mt-1">{errors.date}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -187,17 +360,27 @@ const CreateGamePage: React.FC = () => {
                   <input
                     type="time"
                     value={formData.startTime}
-                    onChange={(e) => handleInputChange('startTime', e.target.value)}
-                    className={`input-field ${errors.startTime ? 'border-red-500' : ''}`}
+                    onChange={(e) =>
+                      handleInputChange("startTime", e.target.value)
+                    }
+                    className={`input-field ${
+                      errors.startTime ? "border-red-500" : ""
+                    }`}
                   />
                   <input
                     type="time"
                     value={formData.endTime}
-                    onChange={(e) => handleInputChange('endTime', e.target.value)}
-                    className={`input-field ${errors.endTime ? 'border-red-500' : ''}`}
+                    onChange={(e) =>
+                      handleInputChange("endTime", e.target.value)
+                    }
+                    className={`input-field ${
+                      errors.endTime ? "border-red-500" : ""
+                    }`}
                   />
                 </div>
-                {errors.endTime && <p className="text-red-500 text-sm mt-1">{errors.endTime}</p>}
+                {errors.endTime && (
+                  <p className="text-red-500 text-sm mt-1">{errors.endTime}</p>
+                )}
               </div>
             </div>
 
@@ -210,11 +393,11 @@ const CreateGamePage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => handleInputChange('isOfflineBooking', false)}
+                    onClick={() => handleInputChange("isOfflineBooking", false)}
                     className={`p-3 rounded-lg border-2 transition-all duration-200 ${
                       !formData.isOfflineBooking
-                        ? 'bg-primary-100 text-primary-800 border-primary-200'
-                        : 'bg-white border-gray-200 hover:border-gray-300'
+                        ? "bg-primary-100 text-primary-800 border-primary-200"
+                        : "bg-white border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="text-center">
@@ -224,11 +407,11 @@ const CreateGamePage: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleInputChange('isOfflineBooking', true)}
+                    onClick={() => handleInputChange("isOfflineBooking", true)}
                     className={`p-3 rounded-lg border-2 transition-all duration-200 ${
                       formData.isOfflineBooking
-                        ? 'bg-turf-100 text-turf-800 border-turf-200'
-                        : 'bg-white border-gray-200 hover:border-gray-300'
+                        ? "bg-turf-100 text-turf-800 border-turf-200"
+                        : "bg-white border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="text-center">
@@ -250,11 +433,17 @@ const CreateGamePage: React.FC = () => {
                 <input
                   type="text"
                   value={formData.turfName}
-                  onChange={(e) => handleInputChange('turfName', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("turfName", e.target.value)
+                  }
                   placeholder="e.g., Turf Up, Green Field"
-                  className={`input-field ${errors.turfName ? 'border-red-500' : ''}`}
+                  className={`input-field ${
+                    errors.turfName ? "border-red-500" : ""
+                  }`}
                 />
-                {errors.turfName && <p className="text-red-500 text-sm mt-1">{errors.turfName}</p>}
+                {errors.turfName && (
+                  <p className="text-red-500 text-sm mt-1">{errors.turfName}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -264,11 +453,19 @@ const CreateGamePage: React.FC = () => {
                 <input
                   type="text"
                   value={formData.turfLocation}
-                  onChange={(e) => handleInputChange('turfLocation', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("turfLocation", e.target.value)
+                  }
                   placeholder="e.g., Downtown Sports Complex"
-                  className={`input-field ${errors.turfLocation ? 'border-red-500' : ''}`}
+                  className={`input-field ${
+                    errors.turfLocation ? "border-red-500" : ""
+                  }`}
                 />
-                {errors.turfLocation && <p className="text-red-500 text-sm mt-1">{errors.turfLocation}</p>}
+                {errors.turfLocation && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.turfLocation}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -281,7 +478,9 @@ const CreateGamePage: React.FC = () => {
                 </label>
                 <select
                   value={formData.maxPlayers}
-                  onChange={(e) => handleInputChange('maxPlayers', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleInputChange("maxPlayers", parseInt(e.target.value))
+                  }
                   className="input-field"
                 >
                   {maxPlayersOptions[formData.sport].map((count) => (
@@ -299,12 +498,23 @@ const CreateGamePage: React.FC = () => {
                 <input
                   type="number"
                   value={formData.requiredPlayers}
-                  onChange={(e) => handleInputChange('requiredPlayers', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "requiredPlayers",
+                      parseInt(e.target.value)
+                    )
+                  }
                   min="1"
                   max={formData.maxPlayers - 1}
-                  className={`input-field ${errors.requiredPlayers ? 'border-red-500' : ''}`}
+                  className={`input-field ${
+                    errors.requiredPlayers ? "border-red-500" : ""
+                  }`}
                 />
-                {errors.requiredPlayers && <p className="text-red-500 text-sm mt-1">{errors.requiredPlayers}</p>}
+                {errors.requiredPlayers && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.requiredPlayers}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -315,17 +525,30 @@ const CreateGamePage: React.FC = () => {
                 Per Head Contribution (Optional)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                  ₹
+                </span>
                 <input
                   type="number"
-                  value={formData.perHeadContribution || ''}
-                  onChange={(e) => handleInputChange('perHeadContribution', e.target.value ? parseInt(e.target.value) : undefined)}
+                  value={formData.perHeadContribution || ""}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "perHeadContribution",
+                      e.target.value ? parseInt(e.target.value) : undefined
+                    )
+                  }
                   placeholder="0"
                   min="0"
-                  className={`input-field pl-8 ${errors.perHeadContribution ? 'border-red-500' : ''}`}
+                  className={`input-field pl-8 ${
+                    errors.perHeadContribution ? "border-red-500" : ""
+                  }`}
                 />
               </div>
-              {errors.perHeadContribution && <p className="text-red-500 text-sm mt-1">{errors.perHeadContribution}</p>}
+              {errors.perHeadContribution && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.perHeadContribution}
+                </p>
+              )}
               <p className="text-sm text-gray-500 mt-1">
                 Leave empty if no contribution is required
               </p>
@@ -338,23 +561,41 @@ const CreateGamePage: React.FC = () => {
                 Game Description (Optional)
               </label>
               <textarea
-                value={formData.description || ''}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                value={formData.description || ""}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 placeholder="Add any additional details about the game, skill level, etc."
                 rows={3}
                 className="input-field"
               />
             </div>
 
-            {/* Submit Button */}
-            <div className="pt-4">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-primary w-full py-3 text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Creating Game...' : 'Create Game'}
-              </button>
+            {/* Action Buttons */}
+            <div className="pt-4 space-y-3">
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => saveDraft(false)}
+                  disabled={isSavingDraft || isLoading}
+                  className="flex-1 btn-secondary py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSavingDraft ? "Saving..." : "Save as Draft"}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 btn-primary py-3 text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Creating Game..." : "Create Game"}
+                </button>
+              </div>
+              {hasDraft && (
+                <p className="text-sm text-gray-500 text-center">
+                  ✓ Draft saved. Your progress is automatically saved.
+                </p>
+              )}
             </div>
           </form>
         </div>

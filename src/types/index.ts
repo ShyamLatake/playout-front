@@ -1,20 +1,24 @@
 export interface User {
   id: string;
   firebaseId?: string;
+  firebaseUid?: string;
   name: string;
   email: string;
   phone?: string;
   avatar?: string;
   rating: number;
   sports: Sport[];
-  userType: UserType;
+  userType?: UserType; // Deprecated, use roles instead
+  roles?: string[]; // New role-based system
   isActive: boolean;
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
   lastLogin?: Date;
   createdAt: Date;
 }
 
 export interface TurfOwner extends User {
-  userType: 'turf_owner';
+  userType: "turf_owner";
   businessName?: string;
   businessAddress?: string;
   businessPhone?: string;
@@ -24,7 +28,7 @@ export interface TurfOwner extends User {
 }
 
 export interface NormalUser extends User {
-  userType: 'normal_user';
+  userType: "normal_user";
   joinedGames: string[]; // Array of game IDs
   totalGamesPlayed: number;
   preferredLocations: string[];
@@ -123,12 +127,12 @@ export interface TurfBookingRequest {
   createdAt: Date;
 }
 
-export type Sport = 'cricket' | 'football' | 'tennis' | 'badminton';
-export type UserType = 'normal_user' | 'turf_owner' | 'admin';
-export type GameStatus = 'open' | 'full' | 'cancelled' | 'completed';
-export type RequestStatus = 'pending' | 'approved' | 'rejected';
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type Sport = "cricket" | "football" | "tennis" | "badminton";
+export type UserType = "normal_user" | "turf_owner" | "coach" | "admin";
+export type GameStatus = "open" | "full" | "cancelled" | "completed";
+export type RequestStatus = "pending" | "approved" | "rejected";
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 
 export interface CreateGameForm {
   sport: Sport;
@@ -169,7 +173,7 @@ export interface FilterOptions {
 }
 // Admin specific interfaces
 export interface AdminUser extends User {
-  userType: 'admin';
+  userType: "admin";
   permissions: AdminPermission[];
   role: AdminRole;
 }
@@ -187,12 +191,18 @@ export interface AdminStats {
 
 export interface AdminActivity {
   id: string;
-  type: 'user_registration' | 'turf_creation' | 'game_creation' | 'booking' | 'payment' | 'report';
+  type:
+    | "user_registration"
+    | "turf_creation"
+    | "game_creation"
+    | "booking"
+    | "payment"
+    | "report";
   description: string;
   userId?: string;
   userName?: string;
   timestamp: Date;
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
 }
 
 export interface UserReport {
@@ -227,10 +237,14 @@ export interface TurfReport {
 
 export interface AdminNotification {
   id: string;
-  type: 'approval_required' | 'report_submitted' | 'payment_issue' | 'system_alert';
+  type:
+    | "approval_required"
+    | "report_submitted"
+    | "payment_issue"
+    | "system_alert";
   title: string;
   message: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: "low" | "medium" | "high" | "urgent";
   isRead: boolean;
   actionRequired: boolean;
   relatedId?: string;
@@ -255,29 +269,33 @@ export interface SystemSettings {
   updatedBy: string;
 }
 
-export type AdminPermission = 
-  | 'manage_users' 
-  | 'manage_turfs' 
-  | 'manage_games' 
-  | 'manage_bookings' 
-  | 'view_reports' 
-  | 'manage_payments' 
-  | 'system_settings'
-  | 'view_analytics';
+export type AdminPermission =
+  | "manage_users"
+  | "manage_turfs"
+  | "manage_games"
+  | "manage_bookings"
+  | "view_reports"
+  | "manage_payments"
+  | "system_settings"
+  | "view_analytics";
 
-export type AdminRole = 'super_admin' | 'admin' | 'moderator';
+export type AdminRole = "super_admin" | "admin" | "moderator";
 
-export type ReportReason = 
-  | 'inappropriate_behavior' 
-  | 'fake_profile' 
-  | 'spam' 
-  | 'harassment' 
-  | 'fraud' 
-  | 'poor_turf_condition' 
-  | 'misleading_information' 
-  | 'other';
+export type ReportReason =
+  | "inappropriate_behavior"
+  | "fake_profile"
+  | "spam"
+  | "harassment"
+  | "fraud"
+  | "poor_turf_condition"
+  | "misleading_information"
+  | "other";
 
-export type ReportStatus = 'pending' | 'investigating' | 'resolved' | 'dismissed';
+export type ReportStatus =
+  | "pending"
+  | "investigating"
+  | "resolved"
+  | "dismissed";
 
 // Analytics interfaces
 export interface AnalyticsMetrics {
@@ -314,7 +332,7 @@ export interface Analytics {
   ownerId: string;
   date: Date;
   metrics: AnalyticsMetrics;
-  period: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  period: "daily" | "weekly" | "monthly" | "yearly";
   createdAt: Date;
   updatedAt: Date;
 }

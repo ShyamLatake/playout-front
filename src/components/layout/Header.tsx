@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
 import { useGame } from '../../contexts/GameContext';
+import { getUserType, getUserTypeDisplay } from '../../utils/userUtils';
 import {
   Bell,
   Search,
@@ -104,7 +105,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
             {/* Quick actions */}
             {user && (
               <div className="hidden sm:flex items-center gap-2">
-                {user.userType === 'normal_user' && (
+                {getUserType(user) === 'normal_user' && (
                   <button
                     onClick={() => navigate('/create')}
                     className="btn-primary text-sm py-2 px-3 flex items-center gap-2"
@@ -113,7 +114,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                     <span className="hidden lg:inline">Create Game</span>
                   </button>
                 )}
-                {user.userType === 'turf_owner' && (
+                {getUserType(user) === 'turf_owner' && (
                   <button
                     onClick={() => navigate('/create-turf')}
                     className="btn-primary text-sm py-2 px-3 flex items-center gap-2"
@@ -200,7 +201,9 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                   </div>
                   <div className="hidden sm:block text-left">
                     <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                    <p className="text-xs text-gray-500 capitalize">{user.userType.replace('_', ' ')}</p>
+                    <p className="text-xs text-gray-500 capitalize">
+                      {getUserTypeDisplay(user)}
+                    </p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-500" />
                 </button>
@@ -225,7 +228,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                         Profile
                       </button>
 
-                      {user.userType === 'normal_user' && (
+                      {getUserType(user) === 'normal_user' && (
                         <button
                           onClick={() => {
                             navigate('/my-dashboard');
@@ -238,7 +241,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                         </button>
                       )}
 
-                      {user.userType === 'turf_owner' && (
+                      {getUserType(user) === 'turf_owner' && (
                         <button
                           onClick={() => {
                             navigate('/turf-dashboard');
@@ -251,7 +254,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                         </button>
                       )}
 
-                      {user.userType === 'admin' && (
+                      {getUserType(user) === 'admin' && (
                         <button
                           onClick={() => {
                             navigate('/admin-dashboard');

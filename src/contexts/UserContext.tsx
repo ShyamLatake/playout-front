@@ -4,6 +4,7 @@ import { auth } from '../config/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { apiService } from '../services/api';
 import { getFirebaseUserInfo } from '../utils/firebase';
+import { getUserType } from '../utils/userUtils';
 
 interface UserContextType {
   user: User | null;
@@ -11,6 +12,7 @@ interface UserContextType {
   logout: () => void;
   register: (userData: Partial<User> & { password: string; userType: UserType }) => Promise<User>;
   switchUserType: (userType: UserType) => void;
+  refreshProfile: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -37,11 +39,18 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Get user data from backend
+          // Get user data from backend using login endpoint
+          // This will auto-register if user doesn't exist
           const idToken = await firebaseUser.getIdToken();
           const response = await apiService.login(idToken) as any;
-          setUser(response.data?.user);
+          const userData = response.data?.user;
+          // Map roles to userType for backward compatibility
+          if (userData && !userData.userType && userData.roles) {
+            userData.userType = getUserType(userData);
+          }
+          setUser(userData);
         } catch (error) {
+          console.error('Error fetching user data:', error);
           setUser(null);
         }
       } else {
@@ -63,6 +72,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // Send token to backend for verification and user data
       const response = await apiService.login(idToken) as any;
       const userData = response.data?.user;
+      // Map roles to userType for backward compatibility
+      if (userData && !userData.userType && userData.roles) {
+        userData.userType = getUserType(userData);
+      }
       setUser(userData);
       
       // Return user data for redirect logic
@@ -110,6 +123,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // Register with backend
       const response = await apiService.register(registrationPayload) as any;
       const newUser = response.data?.user;
+      // Map roles to userType for backward compatibility
+      if (newUser && !newUser.userType && newUser.roles) {
+        newUser.userType = getUserType(newUser);
+      }
       setUser(newUser);
       
       // Return user data for redirect logic
@@ -136,11 +153,31 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     if (!user) return;
     
     try {
-      // Update user type via API
+      // Note: userType is deprecated in favor of roles
+      // This is kept for backward compatibility
+      // In the future, use role assignment endpoints instead
       const response = await apiService.updateProfile({ userType }) as any;
       setUser(response.data?.user);
     } catch (error) {
       throw new Error('Failed to switch user type');
+    }
+  };
+
+  // Helper function to refresh user profile
+  const refreshProfile = async () => {
+    if (!auth.currentUser) return;
+    
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+      const response = await apiService.login(idToken) as any;
+      const userData = response.data?.user;
+      // Map roles to userType for backward compatibility
+      if (userData && !userData.userType && userData.roles) {
+        userData.userType = getUserType(userData);
+      }
+      setUser(userData);
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
     }
   };
 
@@ -150,6 +187,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     logout,
     register,
     switchUserType,
+    refreshProfile,
     isLoading,
   };
 
