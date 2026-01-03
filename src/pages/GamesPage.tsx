@@ -5,7 +5,7 @@ import { useUser } from '../contexts/UserContext';
 import { Sport, FilterOptions } from '../types';
 import { Search, Filter, Activity, Zap, Target, Dumbbell } from 'lucide-react';
 import { format } from 'date-fns';
-import GameCard from '../components/GameCard';
+import { GameCard } from '../components/common';
 
 const GamesPage: React.FC = () => {
   const navigate = useNavigate();

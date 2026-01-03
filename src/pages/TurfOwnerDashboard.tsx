@@ -8,10 +8,12 @@ import {
   StatCard,
   TabNavigation,
   EmptyState,
-  TurfCard,
+} from '../components/common';
+import {
   BookingCard,
   BookingRequestCard,
-} from '../components/dashboard';
+  OwnerTurfList,
+} from '../components/turf_owner';
 import {
   MapPin,
   Calendar,
@@ -19,7 +21,9 @@ import {
   BarChart3,
   TrendingUp,
   CheckCircle,
-  XCircle
+  XCircle,
+  Star,
+  Settings
 } from 'lucide-react';
 
 const TurfOwnerDashboard: React.FC = () => {
@@ -175,26 +179,12 @@ const TurfOwnerDashboard: React.FC = () => {
 
               {/* Turfs Tab */}
               {activeTab === 'turfs' && (
-                <div className="space-y-4">
-                  {userTurfs.length > 0 ? (
-                    userTurfs.map((turf) => (
-                      <TurfCard
-                        key={turf.id}
-                        turf={turf}
-                        bookingsCount={getTurfBookings(turf.id).length}
-                        onEdit={(turfId) => navigate(`/turf/${turfId}/edit`)}
-                      />
-                    ))
-                  ) : (
-                    <EmptyState
-                      icon={MapPin}
-                      title="No turfs yet"
-                      description="Start by adding your first turf"
-                      actionLabel="Add Your First Turf"
-                      onAction={() => navigate('/create-turf')}
-                    />
-                  )}
-                </div>
+                <OwnerTurfList
+                  turfs={userTurfs}
+                  isLoading={isLoading}
+                  getTurfBookings={getTurfBookings}
+                  onCreateNew={() => navigate('/create-turf')}
+                />
               )}
 
               {/* Bookings Tab */}

@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
 import { useGame } from '../../contexts/GameContext';
+import { getUserType, getUserTypeDisplay } from '../../utils/userUtils';
 import {
   Home,
   Users,
@@ -60,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       },
     ];
 
-    if (user?.userType === 'admin') {
+    if (getUserType(user) === 'admin') {
       return [
         {
           path: '/admin-dashboard',
@@ -122,7 +123,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       ];
     }
 
-    if (user?.userType === 'turf_owner') {
+    if (getUserType(user) === 'turf_owner') {
       return [
         {
           path: '/turf-dashboard',
@@ -253,7 +254,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </div>
 
             {/* Sports quick access for normal users */}
-            {user?.userType === 'normal_user' && (
+            {getUserType(user) === 'normal_user' && (
               <div className="mt-4 px-3">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   Quick Access
@@ -278,7 +279,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             )}
 
             {/* Recent activity for admins */}
-            {user?.userType === 'admin' && (
+            {getUserType(user) === 'admin' && (
               <div className="mt-4 px-3">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   Recent Activity
@@ -318,7 +319,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
                   <p className="text-xs text-gray-500 capitalize truncate">
-                    {user.userType.replace('_', ' ')}
+                    {getUserTypeDisplay(user)}
                   </p>
                 </div>
                 <button

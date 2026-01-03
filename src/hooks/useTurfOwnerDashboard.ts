@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useTurf } from '../contexts/TurfContext';
 import { useUser } from '../contexts/UserContext';
@@ -6,20 +6,41 @@ import { useUser } from '../contexts/UserContext';
 export const useTurfOwnerDashboard = () => {
   const { user } = useUser();
   const {
+    myTurfs,
     turfs,
     bookings,
     bookingRequests,
+    getMyTurfs,
     getTurfBookings,
     approveBookingRequest,
     rejectBookingRequest,
     isLoading
   } = useTurf();
 
-  // Filter data for current user's turfs
-  const userTurfs = useMemo(() => 
-    turfs.filter(turf => turf.ownerId === user?.id), 
-    [turfs, user?.id]
-  );
+  // Fetch user's turfs when component mounts or user changes
+  useEffect(() => {
+    if (user?.userType === 'turf_owner' && user?.id) {
+      getMyTurfs();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.userType]); // getMyTurfs is memoized, so it's stable
+
+  // Use myTurfs from context, fallback to filtered turfs
+  const userTurfs = useMemo(() => {
+    // Always prefer myTurfs if available (from getMyTurfs API call)
+    if (myTurfs && myTurfs.length > 0) {
+      return myTurfs;
+    }
+    // Fallback to filtering all turfs by ownerId
+    if (user?.id) {
+      return turfs.filter(turf => {
+        const ownerIdStr = turf.ownerId?.toString() || turf.ownerId;
+        const userIdStr = user.id?.toString() || user.id;
+        return ownerIdStr === userIdStr;
+      });
+    }
+    return [];
+  }, [myTurfs, turfs, user?.id]);
 
   const userTurfIds = useMemo(() => 
     userTurfs.map(turf => turf.id), 

@@ -27,7 +27,7 @@ import {
   Trophy,
   UserCheck
 } from 'lucide-react';
-import GameCard from '../components/GameCard';
+import { GameCard } from '../components/common';
 
 const HomePage: React.FC = () => {
   const { user } = useUser();
