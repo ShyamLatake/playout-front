@@ -28,7 +28,6 @@ class ApiService {
     };
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
@@ -116,7 +115,22 @@ class ApiService {
 
   // Turf endpoints
   async getTurfs(params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : "";
+    let queryString = "";
+    if (params) {
+      const searchParams = new URLSearchParams();
+      Object.keys(params).forEach((key) => {
+        const value = params[key];
+        if (value !== undefined && value !== null && value !== "") {
+          if (Array.isArray(value)) {
+            // Handle array parameters (e.g., sport can be an array)
+            value.forEach((v) => searchParams.append(key, String(v)));
+          } else {
+            searchParams.append(key, String(value));
+          }
+        }
+      });
+      queryString = `?${searchParams.toString()}`;
+    }
     return this.request(`/turfs${queryString}`);
   }
 
@@ -145,6 +159,7 @@ class ApiService {
   }
 
   async getMyTurfs(params?: any) {
+    console.log("getMyTurfs", params);
     const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/turfs/owner/my-turfs${queryString}`);
   }
