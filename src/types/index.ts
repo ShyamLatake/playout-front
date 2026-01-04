@@ -48,9 +48,11 @@ export interface Turf {
   isAvailable: boolean;
   description?: string;
   contactPhone?: string;
+  isVerified: boolean;
   operatingHours: {
     open: string;
     close: string;
+    slotDuration: number;
   };
   facilities: string[];
   createdAt: Date;

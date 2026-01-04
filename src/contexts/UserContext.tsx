@@ -72,8 +72,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // Send token to backend for verification and user data
       const response = await apiService.login(idToken) as any;
       const userData = response.data?.user;
+      console.log(userData);
       // Map roles to userType for backward compatibility
       if (userData && !userData.userType && userData.roles) {
+        localStorage.setItem('userType', userData.roles[0]);
+        localStorage.setItem('token', userData.firebaseUid);
         userData.userType = getUserType(userData);
       }
       setUser(userData);

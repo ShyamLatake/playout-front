@@ -126,23 +126,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     if (getUserType(user) === 'turf_owner') {
       return [
         {
-          path: '/turf-dashboard',
+          path: '/turf-owner',
           label: 'Dashboard',
           icon: BarChart3,
           description: 'Turf management overview'
         },
         {
-          path: '/turfs',
+          path: '/turf-owner/turfs',
           label: 'My Turfs',
           icon: MapPin,
           description: 'Manage your turfs'
         },
-        {
-          path: '/create-turf',
-          label: 'Add Turf',
-          icon: Plus,
-          description: 'Register new turf'
-        },
+        // {
+        //   path: '/turf-owner/create-turf',
+        //   label: 'Add Turf',
+        //   icon: Plus,
+        //   description: 'Register new turf'
+        // },
         {
           path: '/bookings',
           label: 'Bookings',
