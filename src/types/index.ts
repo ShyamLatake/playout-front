@@ -52,6 +52,7 @@ export interface Turf {
   operatingHours: {
     open: string;
     close: string;
+    slotDuration: number;
   };
   facilities: string[];
   createdAt: Date;

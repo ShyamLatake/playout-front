@@ -10,7 +10,8 @@ import {
   Eye, 
   Pencil, 
   Trash2,
-  Plus 
+  Plus,
+  Calendar
 } from 'lucide-react';
 
 const ListOwnerTurfs: React.FC = () => {
@@ -331,6 +332,14 @@ const ListOwnerTurfs: React.FC = () => {
                   >
                     <Eye className="h-4 w-4" />
                     View
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate(`/turf-owner/turf/${turf.id}/bookings`)}
+                    className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-700 py-2.5 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Bookings
                   </button>
                   
                   <button

@@ -26,6 +26,7 @@ import { DebugPage } from "./pages/DebugPage";
 import ListOwnerTurfs from "./pages/turf_owner/ListOwnerTurfs";
 import ViewTurf from "./pages/turf_owner/ViewTurf";
 import EditTurf from "./pages/turf_owner/EditTurf";
+import TurfBookings from "./pages/turf_owner/TurfBookings";
 
 function App() {
   return (
@@ -136,6 +137,15 @@ function App() {
                     element={
                       <ProtectedRoute allowedUserTypes={["turf_owner"]}>
                         <EditTurf />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/turf-owner/turf/:id/bookings"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["turf_owner"]}>
+                        <TurfBookings />
                       </ProtectedRoute>
                     }
                   />

@@ -172,10 +172,10 @@ class ApiService {
     });
   }
 
-  async getTurfBookings(id: string, params?: any) {
-    const queryString = params ? `?${new URLSearchParams(params)}` : "";
-    return this.request(`/turfs/${id}/bookings${queryString}`);
-  }
+  // async getTurfBookings(id: string, params?: any) {
+  //   const queryString = params ? `?${new URLSearchParams(params)}` : "";
+  //   return this.request(`/turfs/${id}/bookings${queryString}`);
+  // }
 
   async getTurfReviews(id: string, params?: any) {
     const queryString = params ? `?${new URLSearchParams(params)}` : "";
@@ -275,16 +275,16 @@ class ApiService {
     return this.request(`/bookings${queryString}`);
   }
 
-  async getBookingById(id: string) {
-    return this.request(`/bookings/${id}`);
-  }
+  // async getBookingById(id: string) {
+  //   return this.request(`/bookings/${id}`);
+  // }
 
-  async createBooking(bookingData: any) {
-    return this.request("/bookings", {
-      method: "POST",
-      body: JSON.stringify(bookingData),
-    });
-  }
+  // async createBooking(bookingData: any) {
+  //   return this.request("/bookings", {
+  //     method: "POST",
+  //     body: JSON.stringify(bookingData),
+  //   });
+  // }
 
   async updateBooking(id: string, bookingData: any) {
     return this.request(`/bookings/${id}`, {
@@ -352,6 +352,36 @@ class ApiService {
       method: "POST",
       body: JSON.stringify(data),
     });
+  }
+
+  // Booking endpoints
+  async getTurfBookings(turfId: string, params?: any) {
+    const queryString = params ? `?${new URLSearchParams(params)}` : "";
+    return this.request(`/turfs/${turfId}/bookings${queryString}`);
+  }
+
+  async createBooking(bookingData: any) {
+    return this.request("/bookings", {
+      method: "POST",
+      body: JSON.stringify(bookingData),
+    });
+  }
+
+  async updateBookingStatus(bookingId: string, status: string) {
+    return this.request(`/bookings/${bookingId}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async deleteBooking(bookingId: string) {
+    return this.request(`/bookings/${bookingId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getBookingById(bookingId: string) {
+    return this.request(`/bookings/${bookingId}`);
   }
 }
 
