@@ -116,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar, showSidebar }) => {
                 )}
                 {getUserType(user) === 'turf_owner' && (
                   <button
-                    onClick={() => navigate('/create-turf')}
+                    onClick={() => navigate('/turf-owner/create-turf')}
                     className="btn-primary text-sm py-2 px-3 flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />

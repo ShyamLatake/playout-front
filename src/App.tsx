@@ -17,13 +17,15 @@ import ProfilePage from "./pages/ProfilePage";
 import GameDetailPage from "./pages/GameDetailPage";
 import TurfsPage from "./pages/TurfsPage";
 import BookTurfPage from "./pages/BookTurfPage";
-import TurfOwnerDashboard from "./pages/TurfOwnerDashboard";
-import CreateTurfPage from "./pages/CreateTurfPage";
+import TurfOwnerDashboard from "./pages/turf_owner/TurfOwnerDashboard";
+import CreateTurfPage from "./pages/turf_owner/CreateTurfPage";
 import TurfDetailPage from "./pages/TurfDetailPage";
 import UserDashboard from "./pages/UserDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import { TurfManagement } from "./pages/TurfManagement";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import { DebugPage } from "./pages/DebugPage";
+import ListOwnerTurfs from "./pages/turf_owner/ListOwnerTurfs";
+import ViewTurf from "./pages/turf_owner/ViewTurf";
+import EditTurf from "./pages/turf_owner/EditTurf";
 
 function App() {
   return (
@@ -94,7 +96,7 @@ function App() {
 
                   {/* Turf Owner Routes */}
                   <Route
-                    path="/turf-dashboard"
+                    path="/turf-owner"
                     element={
                       <ProtectedRoute allowedUserTypes={["turf_owner"]}>
                         <TurfOwnerDashboard />
@@ -103,7 +105,7 @@ function App() {
                   />
 
                   <Route
-                    path="/create-turf"
+                    path="/turf-owner/create-turf"
                     element={
                       <ProtectedRoute allowedUserTypes={["turf_owner"]}>
                         <CreateTurfPage />
@@ -112,10 +114,28 @@ function App() {
                   />
 
                   <Route
-                    path="/turf-management"
+                    path="/turf-owner/turfs"
                     element={
                       <ProtectedRoute allowedUserTypes={["turf_owner"]}>
-                        <TurfManagement />
+                        <ListOwnerTurfs />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/turf-owner/view-turf/:id"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["turf_owner"]}>
+                        <ViewTurf />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/turf-owner/turfs/:id"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["turf_owner"]}>
+                        <EditTurf />
                       </ProtectedRoute>
                     }
                   />

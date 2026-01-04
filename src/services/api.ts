@@ -18,6 +18,7 @@ class ApiService {
   ): Promise<T> {
     const token = await this.getAuthToken();
 
+
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
