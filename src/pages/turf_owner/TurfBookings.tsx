@@ -71,6 +71,66 @@ const TurfBookings: React.FC = () => {
     }
   }, [id, selectedDate, statusFilter]);
 
+  // Helper function to format date as "dd Mon. YY"
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day} ${month}. ${year}`;
+  };
+
+  // Helper function to format time as AM/PM
+  const formatTime = (timeString: string) => {
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  // Helper function to check if a time slot is in the past for today
+  const isTimeSlotInPast = (date: string, timeSlot: string) => {
+    const selectedDate = new Date(date).toDateString();
+    const today = new Date().toDateString();
+    
+    // If it's not today, then it's not in the past
+    if (selectedDate !== today) {
+      return false;
+    }
+    
+    // If it's today, check if the time slot has passed
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+    
+    const [slotHour, slotMinute] = timeSlot.split(':').map(Number);
+    const slotTimeInMinutes = slotHour * 60 + slotMinute;
+    
+    return slotTimeInMinutes <= currentTimeInMinutes;
+  };
+
+  // Helper function to check if booking is in the past
+  const isBookingInPast = (bookingDate: string, startTime: string) => {
+    const now = new Date();
+    const bookingDateTime = new Date(`${bookingDate}T${startTime}`);
+    return bookingDateTime < now;
+  };
+
+  // Helper function to check if booking can be edited
+  const canEditBooking = (booking: Booking) => {
+    // Can't edit if booking is in the past
+    if (isBookingInPast(booking.date, booking.startTime)) {
+      return false;
+    }
+    // Can't edit completed or cancelled bookings
+    if (booking.status === 'completed' || booking.status === 'cancelled') {
+      return false;
+    }
+    return true;
+  };
+
   const fetchTurf = async () => {
     try {
       const response: any = await apiService.getTurfById(id!);
@@ -453,12 +513,13 @@ const TurfBookings: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <Clock className="h-6 w-6 text-blue-600" />
-              Time Slots - {new Date(selectedDate).toLocaleDateString()}
+              Time Slots - {formatDate(selectedDate)}
             </h2>
             
             <div className="space-y-2">
               {timeSlots.map((slot) => {
                 const isBooked = isSlotBooked(slot);
+                const isPast = isTimeSlotInPast(selectedDate, slot);
                 const booking = bookings.find(b => b.startTime <= slot && b.endTime > slot && b.status !== 'cancelled');
                 
                 return (
@@ -467,17 +528,25 @@ const TurfBookings: React.FC = () => {
                     className={`p-3 rounded-lg border-2 transition-all ${
                       isBooked 
                         ? 'border-red-200 bg-red-50' 
+                        : isPast
+                        ? 'border-gray-200 bg-gray-50'
                         : 'border-green-200 bg-green-50'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">{slot}</span>
+                      <span className={`font-medium ${isPast ? 'text-gray-400' : ''}`}>
+                        {formatTime(slot)}
+                      </span>
                       {isBooked ? (
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-red-600">Booked</span>
                           {booking && (
                             <span className="text-xs text-gray-600">{booking.userName}</span>
                           )}
+                        </div>
+                      ) : isPast ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-400">Past</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
@@ -560,11 +629,11 @@ const TurfBookings: React.FC = () => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div>
                           <p className="text-sm text-gray-600">Date</p>
-                          <p className="font-medium">{new Date(booking.date).toLocaleDateString()}</p>
+                          <p className="font-medium">{formatDate(booking.date)}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Time</p>
-                          <p className="font-medium">{booking.startTime} - {booking.endTime}</p>
+                          <p className="font-medium">{formatTime(booking.startTime)} - {formatTime(booking.endTime)}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Amount</p>
@@ -575,7 +644,7 @@ const TurfBookings: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Booked On</p>
-                          <p className="font-medium">{new Date(booking.createdAt).toLocaleDateString()}</p>
+                          <p className="font-medium">{formatDate(booking.createdAt)}</p>
                         </div>
                       </div>
 
@@ -588,7 +657,7 @@ const TurfBookings: React.FC = () => {
 
                       <div className="flex justify-between items-center">
                         <div className="flex gap-2">
-                          {booking.status === 'pending' && (
+                          {booking.status === 'pending' && canEditBooking(booking) && (
                             <>
                               <button
                                 onClick={() => updateBookingStatus(booking.id, 'confirmed')}
@@ -608,7 +677,7 @@ const TurfBookings: React.FC = () => {
                               </button>
                             </>
                           )}
-                          {booking.status === 'confirmed' && (
+                          {booking.status === 'confirmed' && canEditBooking(booking) && (
                             <button
                               onClick={() => updateBookingStatus(booking.id, 'completed')}
                               disabled={updatingStatus === booking.id}
@@ -617,6 +686,12 @@ const TurfBookings: React.FC = () => {
                               <CheckCircle className="h-4 w-4" />
                               {updatingStatus === booking.id ? 'Completing...' : 'Mark Complete'}
                             </button>
+                          )}
+                          {!canEditBooking(booking) && (
+                            <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-500 rounded-lg">
+                              <AlertCircle className="h-4 w-4" />
+                              {isBookingInPast(booking.date, booking.startTime) ? 'Past Booking' : 'Cannot Edit'}
+                            </div>
                           )}
                         </div>
 
@@ -628,15 +703,25 @@ const TurfBookings: React.FC = () => {
                             <Eye className="h-4 w-4" />
                           </button>
                           <button 
-                            className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                            title="Edit Booking"
+                            disabled={!canEditBooking(booking)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              canEditBooking(booking)
+                                ? 'text-gray-600 hover:text-green-600 hover:bg-green-50'
+                                : 'text-gray-300 cursor-not-allowed'
+                            }`}
+                            title={canEditBooking(booking) ? "Edit Booking" : "Cannot edit past or completed bookings"}
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => deleteBooking(booking.id)}
-                            className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete Booking"
+                            disabled={!canEditBooking(booking)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              canEditBooking(booking)
+                                ? 'text-gray-600 hover:text-red-600 hover:bg-red-50'
+                                : 'text-gray-300 cursor-not-allowed'
+                            }`}
+                            title={canEditBooking(booking) ? "Delete Booking" : "Cannot delete past or completed bookings"}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -672,11 +757,11 @@ const TurfBookings: React.FC = () => {
                   <h3 className="font-semibold text-blue-900 mb-2">Selected Slot</h3>
                   <div className="flex items-center gap-2 text-blue-700">
                     <Clock className="h-4 w-4" />
-                    <span>{selectedSlot} - {getNextSlot(selectedSlot)}</span>
+                    <span>{formatTime(selectedSlot)} - {formatTime(getNextSlot(selectedSlot))}</span>
                   </div>
                   <div className="flex items-center gap-2 text-blue-700 mt-1">
                     <Calendar className="h-4 w-4" />
-                    <span>{new Date(selectedDate).toLocaleDateString()}</span>
+                    <span>{formatDate(selectedDate)}</span>
                   </div>
                 </div>
 
@@ -724,11 +809,17 @@ const TurfBookings: React.FC = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                       required
                     >
-                      {timeSlots.map((slot) => (
-                        <option key={slot} value={slot} disabled={isSlotBooked(slot)}>
-                          {slot} {isSlotBooked(slot) ? '(Booked)' : ''}
-                        </option>
-                      ))}
+                      {timeSlots.map((slot) => {
+                        const isBooked = isSlotBooked(slot);
+                        const isPast = isTimeSlotInPast(selectedDate, slot);
+                        const isDisabled = isBooked || isPast;
+                        
+                        return (
+                          <option key={slot} value={slot} disabled={isDisabled}>
+                            {formatTime(slot)} {isBooked ? '(Booked)' : isPast ? '(Past)' : ''}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 
@@ -744,7 +835,7 @@ const TurfBookings: React.FC = () => {
                     >
                       {timeSlots.map((slot) => (
                         <option key={slot} value={slot}>
-                          {slot}
+                          {formatTime(slot)}
                         </option>
                       ))}
                     </select>
